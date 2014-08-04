@@ -11,7 +11,10 @@
 var isVirtualNode = require('vtree/is-vnode');
 var isThunk       = require('vtree/is-thunk');
 var isArray       = require('x-is-array');
-var VPatch        = require("vtree/vpatch")
+var VPatch        = require("vtree/vpatch");
+var Delegator     = require('dom-delegator');
+
+Delegator(); // this magically delegates events
 
 /** @constructor */
 function HSThunk(t, ids, key) {
@@ -118,6 +121,7 @@ module.exports = { diff:          require('./diff')
                  , VText:         require('vtree/vtext')
                  , patch:         require('vdom/patch')
                  , createElement: require('vdom/create-element')
+                 , EventHook:     require('./event-hook')
                  };
 
 // the global variable we're using in the bindings
