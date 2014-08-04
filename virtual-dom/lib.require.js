@@ -14,7 +14,8 @@ var isArray       = require('x-is-array');
 var VPatch        = require("vtree/vpatch");
 var Delegator     = require('dom-delegator');
 
-Delegator(); // this magically delegates events
+if (typeof navigator !== 'undefined')
+    Delegator(); // this magically delegates events
 
 /** @constructor */
 function HSThunk(t, ids, key) {

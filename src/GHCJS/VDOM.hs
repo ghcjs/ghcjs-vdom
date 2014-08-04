@@ -23,6 +23,7 @@ module GHCJS.VDOM ( Properties, Children
                   , div, p, a
                   , emptyDiv
                   , text
+                  , createElement
                   ) where
 
 import Prelude hiding (div)
@@ -85,7 +86,7 @@ noChildren = Children [js'| [] |]
 {-# INLINE noChildren #-}
 
 single :: VNode -> Children
-single x = Children [js'| [x] |]
+single (VNode x) = Children [js'| [`x] |]
 {-# INLINE single #-}
 
 class SomeChildren a where someChildren :: a -> Children
@@ -186,6 +187,10 @@ a = js_vnode "a"
 js_vnode :: JSString -> Properties -> Children -> VNode
 js_vnode tag (Properties props) (Children children) =
   VNode [jsu'| new h$vdom.VNode(`tag, `props, `children) |]
+
+
+createElement :: VNode -> IO DOMNode
+createElement (VNode y) = [jsu| h$vdom.createElement(`y) |]
 
 ---- these things should be in ghcjs-prim
 
