@@ -24,7 +24,8 @@ module GHCJS.VDOM ( Properties, Children
                   , emptyDiv
                   , text
                   , createElement
-                  , setEventHandler
+                  , click
+                  , dblclick
                   ) where
 
 import Prelude hiding (div)
@@ -210,6 +211,8 @@ unsafeExport x =
 
 foreign import javascript unsafe "$r = $1;" js_unsafeExport :: Double -> JSRef a
 
+click = setEventHandler "click"
+dblclick = setEventHandler "dblclick"
 
 -- we will defenitly want a cleaner API For this stuff. but it' s a start.
 foreign import javascript unsafe "h$vdom.setEventHandler($3,$1,$2)"

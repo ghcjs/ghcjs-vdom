@@ -30,9 +30,10 @@ main = do
   -- we will probably want a cleaner API For this. but for now
   -- it suffices to demonstrate the way it works.
   let props = [pr|style:{backgroundColor:'red', width: '20px', height: '20px'}|]
-  cb <- syncCallback AlwaysRetain True (putStrLn "hello, world")
-  let newProps = setEventHandler "click" cb props
+  cb <- syncCallback AlwaysRetain True (putStrLn "clicked me")
+  cb2 <- syncCallback AlwaysRetain True (putStrLn "double clicked me")
+  let newProps = click    cb 
+               . dblclick cb2 
+               $ props
   root <- createElement $ div newProps noChildren
   [js_| document.body.appendChild(`root); |]
-
-
