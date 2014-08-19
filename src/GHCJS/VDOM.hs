@@ -185,7 +185,6 @@ a :: Properties -> Children -> VNode
 a = js_vnode "a"
 {-# INLINE a #-}
 
-
 js_vnode :: JSString -> Properties -> Children -> VNode
 js_vnode tag (Properties props) (Children children) =
   VNode [jsu'| new h$vdom.VNode(`tag, `props, `children) |]
@@ -214,4 +213,4 @@ foreign import javascript unsafe "$r = $1;" js_unsafeExport :: Double -> JSRef a
 
 -- we will defenitly want a cleaner API For this stuff. but it' s a start.
 foreign import javascript unsafe "h$vdom.setEventHandler($3,$1,$2)"
-  setEventHandler :: JSString -> JSFun (IO a) -> Properties  -> IO Properties
+  setEventHandler :: JSString -> JSFun (IO a) -> Properties -> Properties
