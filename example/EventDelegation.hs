@@ -27,7 +27,7 @@ main = do
   -- a quick example that demonstrates event delegation.
   -- we will probably want a cleaner API For this. but for now
   -- it suffices to demonstrate the way it works.
-  let props = noProps
+  let props = [pr|style:{backgroundColor:'red', width: '20px', height: '20px'}|]
   cb <- syncCallback AlwaysRetain True (putStrLn "hello, world")
   newProps <- setEventHandler props "click" cb
   root <- createElement $ div newProps noChildren
