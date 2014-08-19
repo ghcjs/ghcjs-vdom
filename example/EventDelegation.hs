@@ -10,6 +10,8 @@ import           Prelude hiding (div)
 
 import           Control.Concurrent
 
+import           Control.Monad ((<=<))
+
 import           System.IO
 
 import           GHCJS.VDOM
@@ -29,7 +31,7 @@ main = do
   -- it suffices to demonstrate the way it works.
   let props = [pr|style:{backgroundColor:'red', width: '20px', height: '20px'}|]
   cb <- syncCallback AlwaysRetain True (putStrLn "hello, world")
-  newProps <- setEventHandler props "click" cb
+  newProps <- setEventHandler "mouseenter" cb props
   root <- createElement $ div newProps noChildren
   [js_| document.body.appendChild(`root); |]
 
