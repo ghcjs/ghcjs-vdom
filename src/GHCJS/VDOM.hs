@@ -24,6 +24,7 @@ module GHCJS.VDOM ( Properties, Children
                   , emptyDiv
                   , text
                   , createElement
+                  , setEventHandler
                   ) where
 
 import Prelude hiding (div)
@@ -209,3 +210,7 @@ unsafeExport x =
 
 foreign import javascript unsafe "$r = $1;" js_unsafeExport :: Double -> JSRef a
 
+
+-- we will defenitly want a cleaner API For this stuff. but it' s a start.
+foreign import javascript unsafe "h$vdom.setEventHandler($1,$2,$3)"
+  setEventHandler :: Properties -> JSString -> JSFun (IO a) -> IO Properties

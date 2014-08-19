@@ -21,5 +21,3 @@ type J = JSRef ()
 
 j :: QuasiQuoter
 j = jsu'
-
-

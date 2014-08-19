@@ -67,3 +67,15 @@ executable example
                   containers,
                   ghcjs-base
   ghcjs-Options:    -O -Wall
+executable example-ev
+  if !flag(build-example)
+      buildable: False
+  Main-Is:        EventDelegation.hs
+  cpp-options: -DGHCJS_NO_CATCH_MAINLOOP
+  Default-Language: Haskell2010
+  hs-source-dirs: example
+  Build-Depends:  base                >= 4    &&  < 5,
+                  ghcjs-ffiqq,
+                  ghcjs-vdom,
+                  ghcjs-base
+  ghcjs-Options:    -O -Wall
