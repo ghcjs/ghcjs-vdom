@@ -85,7 +85,7 @@ noChildren = Children [js'| [] |]
 {-# INLINE noChildren #-}
 
 single :: VNode -> Children
-single x = Children [js'| [x] |]
+single (VNode x) = Children [js'| [`x]|]
 {-# INLINE single #-}
 
 class SomeChildren a where someChildren :: a -> Children
