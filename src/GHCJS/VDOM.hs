@@ -40,7 +40,7 @@ import Control.Monad
 import System.IO.Unsafe
 import Unsafe.Coerce
 
-import GHCJS.PureMarshal
+import GHCJS.Marshal
 
 class MemoNode a where memoNode :: (J, [JSIdent], a) -> a
 
@@ -93,13 +93,13 @@ instance SomeChildren VNode where
   someChildren v = single v
   {-# INLINE someChildren #-}
 instance SomeChildren (VNode,VNode) where
-  someChildren (VNode a, VNode b) = Children (castRef $ ptoJSRef (a,b))
+  someChildren (VNode a, VNode b) = Children (castRef . unsafePerformIO $ toJSRef (a,b))
   {-# INLINE someChildren #-}
 instance SomeChildren (VNode,VNode,VNode) where
-  someChildren (VNode a, VNode b, VNode c) = Children (castRef $ ptoJSRef (a,b,c))
+  someChildren (VNode a, VNode b, VNode c) = Children (castRef . unsafePerformIO $ toJSRef (a,b,c))
   {-# INLINE someChildren #-}
 instance SomeChildren (VNode,VNode,VNode,VNode) where
-  someChildren (VNode a, VNode b, VNode c, VNode d) = Children (castRef $ ptoJSRef (a,b,c,d))
+  someChildren (VNode a, VNode b, VNode c, VNode d) = Children (castRef . unsafePerformIO $ toJSRef (a,b,c,d))
   {-# INLINE someChildren #-}
 
 mkChildren :: [VNode] -> Children
