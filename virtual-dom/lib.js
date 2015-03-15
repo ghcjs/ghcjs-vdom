@@ -9,11 +9,11 @@
 var isArray = require("x-is-array")
 var isObject = require("is-object")
 
-var VPatch = require("vtree/vpatch")
-var isVNode = require("vtree/is-vnode")
-var isVText = require("vtree/is-vtext")
-var isWidget = require("vtree/is-widget")
-var isThunk = require("vtree/is-thunk")
+var VPatch = require("virtual-dom/vnode/vpatch")
+var isVNode = require("virtual-dom/vnode/is-vnode")
+var isVText = require("virtual-dom/vnode/is-vtext")
+var isWidget = require("virtual-dom/vnode/is-widget")
+var isThunk = require("virtual-dom/vnode/is-thunk")
 var handleThunk = require("./handle-thunk")
 
 module.exports = diff
@@ -387,11 +387,11 @@ function appendPatch(apply, patch) {
     }
 }
 
-},{"./handle-thunk":2,"is-object":5,"vtree/is-thunk":23,"vtree/is-vnode":25,"vtree/is-vtext":26,"vtree/is-widget":27,"vtree/vpatch":30,"x-is-array":32}],2:[function(require,module,exports){
-var isVNode = require("vtree/is-vnode")
-var isVText = require("vtree/is-vtext")
-var isWidget = require("vtree/is-widget")
-var isThunk = require("vtree/is-thunk")
+},{"./handle-thunk":2,"is-object":5,"virtual-dom/vnode/is-thunk":15,"virtual-dom/vnode/is-vnode":17,"virtual-dom/vnode/is-vtext":18,"virtual-dom/vnode/is-widget":19,"virtual-dom/vnode/vpatch":22,"x-is-array":24}],2:[function(require,module,exports){
+var isVNode = require("virtual-dom/vnode/is-vnode")
+var isVText = require("virtual-dom/vnode/is-vtext")
+var isWidget = require("virtual-dom/vnode/is-widget")
+var isThunk = require("virtual-dom/vnode/is-thunk")
 
 module.exports = handleThunk
 
@@ -407,24 +407,21 @@ function renderThunk(thunk, previous) {
     return thunk.vnode ? null : thunk;
 }
 
-},{"vtree/is-thunk":23,"vtree/is-vnode":25,"vtree/is-vtext":26,"vtree/is-widget":27}],3:[function(require,module,exports){
+},{"virtual-dom/vnode/is-thunk":15,"virtual-dom/vnode/is-vnode":17,"virtual-dom/vnode/is-vtext":18,"virtual-dom/vnode/is-widget":19}],3:[function(require,module,exports){
 /*
   to generate lib.js, install virtual-dom and process file:
 
-     $ npm install virtual-dom
-     $ npm install x-is-array
-     $ npm install is-object
-     $ browserify lib.require.js -o lib.js
-
+     $ npm install
+     $ grunt
    the ./diff module is vtree/diff with a few changes to
    allow diff to run in an asynchronous thread in the presence of
    memoized nodes.
  */
 
-var isVirtualNode = require('vtree/is-vnode');
-var isThunk       = require('vtree/is-thunk');
+var isVirtualNode = require('virtual-dom/vnode/is-vnode');
+var isThunk       = require('virtual-dom/vnode/is-thunk');
 var isArray       = require('x-is-array');
-var VPatch        = require("vtree/vpatch")
+var VPatch        = require("virtual-dom/vnode/vpatch")
 
 /** @constructor */
 function HSThunk(t, ids, key) {
@@ -527,17 +524,17 @@ module.exports = { diff:          require('./diff')
                  , setThunkPatch: setThunkPatch
                  , forceTree:     forceTree
                  , forcePatch:    forcePatch
-                 , VNode:         require('vtree/vnode')
-                 , VText:         require('vtree/vtext')
-                 , patch:         require('vdom/patch')
-                 , createElement: require('vdom/create-element')
+                 , VNode:         require('virtual-dom/vnode/vnode')
+                 , VText:         require('virtual-dom/vnode/vtext')
+                 , patch:         require('virtual-dom/vdom/patch')
+                 , createElement: require('virtual-dom/vdom/create-element')
                  };
 
 // the global variable we're using in the bindings
 h$vdom = module.exports;
 h$registerExtensibleRetention(scanTree);
 
-},{"./diff":1,"vdom/create-element":7,"vdom/patch":21,"vtree/is-thunk":23,"vtree/is-vnode":25,"vtree/vnode":29,"vtree/vpatch":30,"vtree/vtext":31,"x-is-array":32}],4:[function(require,module,exports){
+},{"./diff":1,"virtual-dom/vdom/create-element":9,"virtual-dom/vdom/patch":12,"virtual-dom/vnode/is-thunk":15,"virtual-dom/vnode/is-vnode":17,"virtual-dom/vnode/vnode":21,"virtual-dom/vnode/vpatch":22,"virtual-dom/vnode/vtext":23,"x-is-array":24}],4:[function(require,module,exports){
 
 },{}],5:[function(require,module,exports){
 module.exports = isObject
@@ -547,8 +544,34 @@ function isObject(x) {
 }
 
 },{}],6:[function(require,module,exports){
+(function (global){
+var topLevel = typeof global !== 'undefined' ? global :
+    typeof window !== 'undefined' ? window : {}
+var minDoc = require('min-document');
+
+if (typeof document !== 'undefined') {
+    module.exports = document;
+} else {
+    var doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'];
+
+    if (!doccy) {
+        doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'] = minDoc;
+    }
+
+    module.exports = doccy;
+}
+
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"min-document":4}],7:[function(require,module,exports){
+"use strict";
+
+module.exports = function isObject(x) {
+	return typeof x === "object" && x !== null;
+};
+
+},{}],8:[function(require,module,exports){
 var isObject = require("is-object")
-var isHook = require("vtree/is-vhook")
+var isHook = require("../vnode/is-vhook.js")
 
 module.exports = applyProperties
 
@@ -557,22 +580,25 @@ function applyProperties(node, props, previous) {
         var propValue = props[propName]
 
         if (propValue === undefined) {
-            removeProperty(node, props, previous, propName);
+            removeProperty(node, propName, propValue, previous);
         } else if (isHook(propValue)) {
-            propValue.hook(node,
-                propName,
-                previous ? previous[propName] : undefined)
+            removeProperty(node, propName, propValue, previous)
+            if (propValue.hook) {
+                propValue.hook(node,
+                    propName,
+                    previous ? previous[propName] : undefined)
+            }
         } else {
             if (isObject(propValue)) {
                 patchObject(node, props, previous, propName, propValue);
-            } else if (propValue !== undefined) {
+            } else {
                 node[propName] = propValue
             }
         }
     }
 }
 
-function removeProperty(node, props, previous, propName) {
+function removeProperty(node, propName, propValue, previous) {
     if (previous) {
         var previousValue = previous[propName]
 
@@ -590,6 +616,8 @@ function removeProperty(node, props, previous, propName) {
             } else {
                 node[propName] = null
             }
+        } else if (previousValue.unhook) {
+            previousValue.unhook(node, propName, propValue)
         }
     }
 }
@@ -640,15 +668,15 @@ function getPrototype(value) {
     }
 }
 
-},{"is-object":10,"vtree/is-vhook":13}],7:[function(require,module,exports){
+},{"../vnode/is-vhook.js":16,"is-object":7}],9:[function(require,module,exports){
 var document = require("global/document")
 
 var applyProperties = require("./apply-properties")
 
-var isVNode = require("vtree/is-vnode")
-var isVText = require("vtree/is-vtext")
-var isWidget = require("vtree/is-widget")
-var handleThunk = require("vtree/handle-thunk")
+var isVNode = require("../vnode/is-vnode.js")
+var isVText = require("../vnode/is-vtext.js")
+var isWidget = require("../vnode/is-widget.js")
+var handleThunk = require("../vnode/handle-thunk.js")
 
 module.exports = createElement
 
@@ -688,7 +716,7 @@ function createElement(vnode, opts) {
     return node
 }
 
-},{"./apply-properties":6,"global/document":9,"vtree/handle-thunk":11,"vtree/is-vnode":14,"vtree/is-vtext":15,"vtree/is-widget":16}],8:[function(require,module,exports){
+},{"../vnode/handle-thunk.js":14,"../vnode/is-vnode.js":17,"../vnode/is-vtext.js":18,"../vnode/is-widget.js":19,"./apply-properties":8,"global/document":6}],10:[function(require,module,exports){
 // Maps a virtual DOM tree onto a real DOM tree in an efficient manner.
 // We don't want to read all of the DOM nodes in the tree so we use
 // the in-order tree indexing to eliminate recursion down certain branches.
@@ -775,151 +803,11 @@ function ascending(a, b) {
     return a > b ? 1 : -1
 }
 
-},{}],9:[function(require,module,exports){
-(function (global){
-var topLevel = typeof global !== 'undefined' ? global :
-    typeof window !== 'undefined' ? window : {}
-var minDoc = require('min-document');
-
-if (typeof document !== 'undefined') {
-    module.exports = document;
-} else {
-    var doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'];
-
-    if (!doccy) {
-        doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'] = minDoc;
-    }
-
-    module.exports = doccy;
-}
-
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"min-document":4}],10:[function(require,module,exports){
-module.exports=require(5)
 },{}],11:[function(require,module,exports){
-var isVNode = require("./is-vnode")
-var isVText = require("./is-vtext")
-var isWidget = require("./is-widget")
-var isThunk = require("./is-thunk")
-
-module.exports = handleThunk
-
-function handleThunk(a, b) {
-    var renderedA = a
-    var renderedB = b
-
-    if (isThunk(b)) {
-        renderedB = renderThunk(b, a)
-    }
-
-    if (isThunk(a)) {
-        renderedA = renderThunk(a, null)
-    }
-
-    return {
-        a: renderedA,
-        b: renderedB
-    }
-}
-
-function renderThunk(thunk, previous) {
-    var renderedThunk = thunk.vnode
-
-    if (!renderedThunk) {
-        renderedThunk = thunk.vnode = thunk.render(previous)
-    }
-
-    if (!(isVNode(renderedThunk) ||
-            isVText(renderedThunk) ||
-            isWidget(renderedThunk))) {
-        throw new Error("thunk did not return a valid node");
-    }
-
-    return renderedThunk
-}
-
-},{"./is-thunk":12,"./is-vnode":14,"./is-vtext":15,"./is-widget":16}],12:[function(require,module,exports){
-module.exports = isThunk
-
-function isThunk(t) {
-    return t && t.type === "Thunk"
-}
-
-},{}],13:[function(require,module,exports){
-module.exports = isHook
-
-function isHook(hook) {
-    return hook && typeof hook.hook === "function" &&
-        !hook.hasOwnProperty("hook")
-}
-
-},{}],14:[function(require,module,exports){
-var version = require("./version")
-
-module.exports = isVirtualNode
-
-function isVirtualNode(x) {
-    return x && x.type === "VirtualNode" && x.version === version
-}
-
-},{"./version":17}],15:[function(require,module,exports){
-var version = require("./version")
-
-module.exports = isVirtualText
-
-function isVirtualText(x) {
-    return x && x.type === "VirtualText" && x.version === version
-}
-
-},{"./version":17}],16:[function(require,module,exports){
-module.exports = isWidget
-
-function isWidget(w) {
-    return w && w.type === "Widget"
-}
-
-},{}],17:[function(require,module,exports){
-module.exports = "1"
-
-},{}],18:[function(require,module,exports){
-var version = require("./version")
-
-VirtualPatch.NONE = 0
-VirtualPatch.VTEXT = 1
-VirtualPatch.VNODE = 2
-VirtualPatch.WIDGET = 3
-VirtualPatch.PROPS = 4
-VirtualPatch.ORDER = 5
-VirtualPatch.INSERT = 6
-VirtualPatch.REMOVE = 7
-VirtualPatch.THUNK = 8
-
-module.exports = VirtualPatch
-
-function VirtualPatch(type, vNode, patch) {
-    this.type = Number(type)
-    this.vNode = vNode
-    this.patch = patch
-}
-
-VirtualPatch.prototype.version = version
-VirtualPatch.prototype.type = "VirtualPatch"
-
-},{"./version":17}],19:[function(require,module,exports){
-var nativeIsArray = Array.isArray
-var toString = Object.prototype.toString
-
-module.exports = nativeIsArray || isArray
-
-function isArray(obj) {
-    return toString.call(obj) === "[object Array]"
-}
-
-},{}],20:[function(require,module,exports){
 var applyProperties = require("./apply-properties")
 
-var isWidget = require("vtree/is-widget")
-var VPatch = require("vtree/vpatch")
+var isWidget = require("../vnode/is-widget.js")
+var VPatch = require("../vnode/vpatch.js")
 
 var render = require("./create-element")
 var updateWidget = require("./update-widget")
@@ -988,42 +876,44 @@ function stringPatch(domNode, leftVNode, vText, renderOptions) {
         var parentNode = domNode.parentNode
         newNode = render(vText, renderOptions)
 
-        if (parentNode) {
+        if (parentNode && newNode !== domNode) {
             parentNode.replaceChild(newNode, domNode)
         }
     }
-
-    destroyWidget(domNode, leftVNode)
 
     return newNode
 }
 
 function widgetPatch(domNode, leftVNode, widget, renderOptions) {
-    if (updateWidget(leftVNode, widget)) {
-        return widget.update(leftVNode, domNode) || domNode
+    var updating = updateWidget(leftVNode, widget)
+    var newNode
+
+    if (updating) {
+        newNode = widget.update(leftVNode, domNode) || domNode
+    } else {
+        newNode = render(widget, renderOptions)
     }
 
     var parentNode = domNode.parentNode
-    var newWidget = render(widget, renderOptions)
 
-    if (parentNode) {
-        parentNode.replaceChild(newWidget, domNode)
+    if (parentNode && newNode !== domNode) {
+        parentNode.replaceChild(newNode, domNode)
     }
 
-    destroyWidget(domNode, leftVNode)
+    if (!updating) {
+        destroyWidget(domNode, leftVNode)
+    }
 
-    return newWidget
+    return newNode
 }
 
 function vNodePatch(domNode, leftVNode, vNode, renderOptions) {
     var parentNode = domNode.parentNode
     var newNode = render(vNode, renderOptions)
 
-    if (parentNode) {
+    if (parentNode && newNode !== domNode) {
         parentNode.replaceChild(newNode, domNode)
     }
-
-    destroyWidget(domNode, leftVNode)
 
     return newNode
 }
@@ -1034,58 +924,40 @@ function destroyWidget(domNode, w) {
     }
 }
 
-function reorderChildren(domNode, bIndex) {
-    var children = []
+function reorderChildren(domNode, moves) {
     var childNodes = domNode.childNodes
-    var len = childNodes.length
-    var i
-    var reverseIndex = bIndex.reverse
+    var keyMap = {}
+    var node
+    var remove
+    var insert
 
-    for (i = 0; i < len; i++) {
-        children.push(domNode.childNodes[i])
+    for (var i = 0; i < moves.removes.length; i++) {
+        remove = moves.removes[i]
+        node = childNodes[remove.from]
+        if (remove.key) {
+            keyMap[remove.key] = node
+        }
+        domNode.removeChild(node)
     }
 
-    var insertOffset = 0
-    var move
-    var node
-    var insertNode
-    for (i = 0; i < len; i++) {
-        move = bIndex[i]
-        if (move !== undefined && move !== i) {
-            // the element currently at this index will be moved later so increase the insert offset
-            if (reverseIndex[i] > i) {
-                insertOffset++
-            }
-
-            node = children[move]
-            insertNode = childNodes[i + insertOffset]
-            if (node !== insertNode) {
-                domNode.insertBefore(node, insertNode)
-            }
-
-            // the moved element came from the front of the array so reduce the insert offset
-            if (move < i) {
-                insertOffset--
-            }
-        }
-
-        // element at this index is scheduled to be removed so increase insert offset
-        if (i in bIndex.removes) {
-            insertOffset++
-        }
+    var length = childNodes.length
+    for (var j = 0; j < moves.inserts.length; j++) {
+        insert = moves.inserts[j]
+        node = keyMap[insert.key]
+        // this is the weirdest bug i've ever seen in webkit
+        domNode.insertBefore(node, insert.to >= length++ ? null : childNodes[insert.to])
     }
 }
 
 function replaceRoot(oldRoot, newRoot) {
     if (oldRoot && newRoot && oldRoot !== newRoot && oldRoot.parentNode) {
-        console.log(oldRoot)
         oldRoot.parentNode.replaceChild(newRoot, oldRoot)
     }
 
     return newRoot;
 }
 
-},{"./apply-properties":6,"./create-element":7,"./update-widget":22,"vtree/is-widget":16,"vtree/vpatch":18}],21:[function(require,module,exports){
+},{"../vnode/is-widget.js":19,"../vnode/vpatch.js":22,"./apply-properties":8,"./create-element":9,"./update-widget":13}],12:[function(require,module,exports){
 var document = require("global/document")
 var isArray = require("x-is-array")
 
@@ -1163,8 +1035,8 @@ function patchIndices(patches) {
     return indices
 }
 
-},{"./dom-index":8,"./patch-op":20,"global/document":9,"x-is-array":19}],22:[function(require,module,exports){
-var isWidget = require("vtree/is-widget")
+},{"./dom-index":10,"./patch-op":11,"global/document":6,"x-is-array":24}],13:[function(require,module,exports){
+var isWidget = require("../vnode/is-widget.js")
 
 module.exports = updateWidget
 
@@ -1180,22 +1052,97 @@ function updateWidget(a, b) {
     return false
 }
 
-},{"vtree/is-widget":16}],23:[function(require,module,exports){
-module.exports=require(12)
-},{}],24:[function(require,module,exports){
-module.exports=require(13)
-},{}],25:[function(require,module,exports){
-module.exports=require(14)
-},{"./version":28}],26:[function(require,module,exports){
-module.exports=require(15)
-},{"./version":28}],27:[function(require,module,exports){
-module.exports=require(16)
-},{}],28:[function(require,module,exports){
-module.exports=require(17)
-},{}],29:[function(require,module,exports){
+},{"../vnode/is-widget.js":19}],14:[function(require,module,exports){
+var isVNode = require("./is-vnode")
+var isVText = require("./is-vtext")
+var isWidget = require("./is-widget")
+var isThunk = require("./is-thunk")
+
+module.exports = handleThunk
+
+function handleThunk(a, b) {
+    var renderedA = a
+    var renderedB = b
+
+    if (isThunk(b)) {
+        renderedB = renderThunk(b, a)
+    }
+
+    if (isThunk(a)) {
+        renderedA = renderThunk(a, null)
+    }
+
+    return {
+        a: renderedA,
+        b: renderedB
+    }
+}
+
+function renderThunk(thunk, previous) {
+    var renderedThunk = thunk.vnode
+
+    if (!renderedThunk) {
+        renderedThunk = thunk.vnode = thunk.render(previous)
+    }
+
+    if (!(isVNode(renderedThunk) ||
+            isVText(renderedThunk) ||
+            isWidget(renderedThunk))) {
+        throw new Error("thunk did not return a valid node");
+    }
+
+    return renderedThunk
+}
+
+},{"./is-thunk":15,"./is-vnode":17,"./is-vtext":18,"./is-widget":19}],15:[function(require,module,exports){
+module.exports = isThunk
+
+function isThunk(t) {
+    return t && t.type === "Thunk"
+}
+
+},{}],16:[function(require,module,exports){
+module.exports = isHook
+
+function isHook(hook) {
+    return hook &&
+      (typeof hook.hook === "function" && !hook.hasOwnProperty("hook") ||
+       typeof hook.unhook === "function" && !hook.hasOwnProperty("unhook"))
+}
+
+},{}],17:[function(require,module,exports){
+var version = require("./version")
+
+module.exports = isVirtualNode
+
+function isVirtualNode(x) {
+    return x && x.type === "VirtualNode" && x.version === version
+}
+
+},{"./version":20}],18:[function(require,module,exports){
+var version = require("./version")
+
+module.exports = isVirtualText
+
+function isVirtualText(x) {
+    return x && x.type === "VirtualText" && x.version === version
+}
+
+},{"./version":20}],19:[function(require,module,exports){
+module.exports = isWidget
+
+function isWidget(w) {
+    return w && w.type === "Widget"
+}
+
+},{}],20:[function(require,module,exports){
+module.exports = "2"
+
+},{}],21:[function(require,module,exports){
 var version = require("./version")
 var isVNode = require("./is-vnode")
 var isWidget = require("./is-widget")
+var isThunk = require("./is-thunk")
 var isVHook = require("./is-vhook")
 
 module.exports = VirtualNode
@@ -1213,13 +1160,14 @@ function VirtualNode(tagName, properties, children, key, namespace) {
     var count = (children && children.length) || 0
     var descendants = 0
     var hasWidgets = false
+    var hasThunks = false
     var descendantHooks = false
     var hooks
 
     for (var propName in properties) {
         if (properties.hasOwnProperty(propName)) {
             var property = properties[propName]
-            if (isVHook(property)) {
+            if (isVHook(property) && property.unhook) {
                 if (!hooks) {
                     hooks = {}
                 }
@@ -1238,6 +1186,10 @@ function VirtualNode(tagName, properties, children, key, namespace) {
                 hasWidgets = true
             }
 
+            if (!hasThunks && child.hasThunks) {
+                hasThunks = true
+            }
+
             if (!descendantHooks && (child.hooks || child.descendantHooks)) {
                 descendantHooks = true
             }
@@ -1245,11 +1197,14 @@ function VirtualNode(tagName, properties, children, key, namespace) {
             if (typeof child.destroy === "function") {
                 hasWidgets = true
             }
+        } else if (!hasThunks && isThunk(child)) {
+            hasThunks = true;
         }
     }
 
     this.count = count + descendants
     this.hasWidgets = hasWidgets
+    this.hasThunks = hasThunks
     this.hooks = hooks
     this.descendantHooks = descendantHooks
 }
@@ -1257,9 +1212,31 @@ function VirtualNode(tagName, properties, children, key, namespace) {
 VirtualNode.prototype.version = version
 VirtualNode.prototype.type = "VirtualNode"
 
-},{"./is-vhook":24,"./is-vnode":25,"./is-widget":27,"./version":28}],30:[function(require,module,exports){
-module.exports=require(18)
-},{"./version":28}],31:[function(require,module,exports){
+},{"./is-thunk":15,"./is-vhook":16,"./is-vnode":17,"./is-widget":19,"./version":20}],22:[function(require,module,exports){
+var version = require("./version")
+
+VirtualPatch.NONE = 0
+VirtualPatch.VTEXT = 1
+VirtualPatch.VNODE = 2
+VirtualPatch.WIDGET = 3
+VirtualPatch.PROPS = 4
+VirtualPatch.ORDER = 5
+VirtualPatch.INSERT = 6
+VirtualPatch.REMOVE = 7
+VirtualPatch.THUNK = 8
+
+module.exports = VirtualPatch
+
+function VirtualPatch(type, vNode, patch) {
+    this.type = Number(type)
+    this.vNode = vNode
+    this.patch = patch
+}
+
+VirtualPatch.prototype.version = version
+VirtualPatch.prototype.type = "VirtualPatch"
+
+},{"./version":20}],23:[function(require,module,exports){
 var version = require("./version")
 
 module.exports = VirtualText
@@ -1271,6 +1248,14 @@ function VirtualText(text) {
 VirtualText.prototype.version = version
 VirtualText.prototype.type = "VirtualText"
 
-},{"./version":28}],32:[function(require,module,exports){
-module.exports=require(19)
+},{"./version":20}],24:[function(require,module,exports){
+var nativeIsArray = Array.isArray
+var toString = Object.prototype.toString
+
+module.exports = nativeIsArray || isArray
+
+function isArray(obj) {
+    return toString.call(obj) === "[object Array]"
+}
+
 },{}]},{},[3]);
