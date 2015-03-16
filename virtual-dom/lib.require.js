@@ -8,10 +8,10 @@
    memoized nodes.
  */
 
-var isVirtualNode = require('vtree/is-vnode');
-var isThunk       = require('vtree/is-thunk');
+var isVirtualNode = require('virtual-dom/vnode/is-vnode');
+var isThunk       = require('virtual-dom/vnode/is-thunk');
 var isArray       = require('x-is-array');
-var VPatch        = require("vtree/vpatch")
+var VPatch        = require("virtual-dom/vnode/vpatch")
 
 /** @constructor */
 function HSThunk(t, ids, key) {
@@ -114,10 +114,10 @@ module.exports = { diff:          require('./diff')
                  , setThunkPatch: setThunkPatch
                  , forceTree:     forceTree
                  , forcePatch:    forcePatch
-                 , VNode:         require('vtree/vnode')
-                 , VText:         require('vtree/vtext')
-                 , patch:         require('vdom/patch')
-                 , createElement: require('vdom/create-element')
+                 , VNode:         require('virtual-dom/vnode/vnode')
+                 , VText:         require('virtual-dom/vnode/vtext')
+                 , patch:         require('virtual-dom/vdom/patch')
+                 , createElement: require('virtual-dom/vdom/create-element')
                  };
 
 // the global variable we're using in the bindings

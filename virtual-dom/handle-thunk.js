@@ -1,7 +1,7 @@
-var isVNode = require("vtree/is-vnode")
-var isVText = require("vtree/is-vtext")
-var isWidget = require("vtree/is-widget")
-var isThunk = require("vtree/is-thunk")
+var isVNode = require("virtual-dom/vnode/is-vnode")
+var isVText = require("virtual-dom/vnode/is-vtext")
+var isWidget = require("virtual-dom/vnode/is-widget")
+var isThunk = require("virtual-dom/vnode/is-thunk")
 
 module.exports = handleThunk
 
