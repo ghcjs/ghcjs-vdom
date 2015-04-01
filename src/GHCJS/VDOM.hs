@@ -21,6 +21,7 @@ module GHCJS.VDOM ( Properties, Children
                   , noProps, props
                   , noChildren, children, single, mkChildren
                   , div, p, a
+                  , vnode
                   , emptyDiv
                   , text
                   ) where
@@ -182,6 +183,10 @@ p = js_vnode "p"
 a :: Properties -> Children -> VNode
 a = js_vnode "a"
 {-# INLINE a #-}
+
+vnode :: JSString -> Properties -> Children -> VNode
+vnode = js_vnode
+{-# INLINE vnode #-}
 
 js_vnode :: JSString -> Properties -> Children -> VNode
 js_vnode tag (Properties props) (Children children) =
