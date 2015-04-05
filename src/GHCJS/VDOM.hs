@@ -183,9 +183,6 @@ a :: Properties -> Children -> VNode
 a = js_vnode "a"
 {-# INLINE a #-}
 
-js_vnode :: JSString -> Properties -> Children -> VNode
-js_vnode tag (Properties props) (Children children) =
-  VNode [jsu'| new h$vdom.VNode(`tag, `props, `children) |]
 
 ---- these things should be in ghcjs-prim
 

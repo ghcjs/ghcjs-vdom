@@ -1,3 +1,7 @@
+{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE JavaScriptFFI #-}
+{-# LANGUAGE QuasiQuotes #-}
+
 module GHCJS.VDOM.Internal where
 
 import Language.Haskell.TH.Quote
@@ -22,4 +26,7 @@ type J = JSRef ()
 j :: QuasiQuoter
 j = jsu'
 
+js_vnode :: JSString -> Properties -> Children -> VNode
+js_vnode tag (Properties props) (Children children) =
+  VNode [jsu'| new h$vdom.VNode(`tag, `props, `children) |]
 
