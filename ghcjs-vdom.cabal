@@ -44,8 +44,9 @@ library
   ghcjs-options: -O2 -Wall
   exposed-modules:     GHCJS.VDOM
                        GHCJS.VDOM.QQ
+                       GHCJS.VDOM.Unsafe
   other-modules:       GHCJS.VDOM.Internal
-  build-depends:       base >=4.7 && <4.8,
+  build-depends:       base >=4.7 && <4.9,
                        ghcjs-ffiqq,
                        ghcjs-base,
                        ghcjs-prim,
