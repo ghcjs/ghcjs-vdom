@@ -1,5 +1,5 @@
 {
-  "name": "virtual-dom-support",
+  "name": "ghcjs-vdom-support",
   "version": "0.0.0",
   "description": "Support lib for ghcjs-vdom",
   "devDependencies": {
@@ -10,6 +10,7 @@
   "dependencies": {
     "is-object": "^0.1.2",
     "virtual-dom": "^2.0.1",
-    "x-is-array": "^0.1.0"
+    "x-is-array": "^0.1.0",
+    "dom-delegator": "^13.1.0"
   }
 }

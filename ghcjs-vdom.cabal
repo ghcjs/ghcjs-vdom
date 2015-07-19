@@ -1,6 +1,6 @@
 name:                ghcjs-vdom
 version:             0.1.0.0
-synopsis:            Experimental virtual-dom bindings for GHCJS
+synopsis:            Virtual-dom bindings for GHCJS
 description:         Virtual-dom is a library for fast incremental DOM
                      updates by comparing virtual immutable DOM trees to
                      find a minimal number of changes to update the actual DOM.
@@ -29,41 +29,80 @@ extra-source-files:  virtual-dom/lib.require.js
                      virtual-dom/diff.js
                      virtual-dom/LICENSE
                      virtual-dom/handle-thunk.js
+                     virtual-dom/README.md
+                     virtual-dom/package.json
                      data/example.css
                      README.markdown
 
-flag build-example
-  description: build the example program
+flag build-examples
+  description: build the example programs
   default: False
   manual: True
 
 library
-  js-sources: jsbits/utils.js
-              jsbits/vdom.js
+  js-sources: jsbits/vdom.js
               virtual-dom/lib.js
-  ghcjs-options: -O2 -Wall
+  ghcjs-options: -Wall
   exposed-modules:     GHCJS.VDOM
+                       GHCJS.VDOM.Attribute
+                       GHCJS.VDOM.Component
+                       GHCJS.VDOM.DOMComponent
+                       GHCJS.VDOM.Element
+                       GHCJS.VDOM.Event
                        GHCJS.VDOM.QQ
+                       GHCJS.VDOM.Render
+                       GHCJS.VDOM.Unsafe
   other-modules:       GHCJS.VDOM.Internal
-  build-depends:       base >=4.7 && <4.8,
+                       GHCJS.VDOM.Internal.TH
+                       GHCJS.VDOM.Internal.Thunk
+                       GHCJS.VDOM.Internal.Types
+                       GHCJS.VDOM.Element.Builtin
+  build-depends:       base >=4.7 && < 5,
+                       ghc-prim,
                        ghcjs-ffiqq,
-                       ghcjs-base,
+                       ghcjs-base >= 0.2.0.0,
                        ghcjs-prim,
+                       containers,
                        split,
                        template-haskell
   hs-source-dirs:      src
   default-language:    Haskell2010
 
-executable example
-  if !flag(build-example)
+executable ghcjs-vdom-example-table
+  if !flag(build-examples)
       buildable: False
-  Main-Is:        Example.hs
-  cpp-options: -DGHCJS_NO_CATCH_MAINLOOP
+  Main-Is:        Table.hs
   Default-Language: Haskell2010
-  hs-source-dirs: example
+  hs-source-dirs: examples
   Build-Depends:  base                >= 4    &&  < 5,
                   ghcjs-ffiqq,
                   ghcjs-vdom,
                   containers,
                   ghcjs-base
-  ghcjs-Options:    -O -Wall
+  ghcjs-Options: -Wall
+
+executable ghcjs-vdom-example-components
+  if !flag(build-examples)
+      buildable: False
+  Main-Is:        Components.hs
+  Default-Language: Haskell2010
+  hs-source-dirs: examples
+  Build-Depends:  base                >= 4    &&  < 5,
+                  ghcjs-ffiqq,
+                  ghcjs-vdom,
+                  containers,
+                  ghcjs-base
+  ghcjs-Options: -Wall
+
+executable ghcjs-vdom-example-render
+  if !flag(build-examples)
+      buildable: False
+  Main-Is:        Render.hs
+  Default-Language: Haskell2010
+  hs-source-dirs: examples
+  Build-Depends:  base                >= 4    &&  < 5,
+                  ghcjs-ffiqq,
+                  ghcjs-vdom,
+                  containers,
+                  ghcjs-base
+  ghcjs-Options: -Wall

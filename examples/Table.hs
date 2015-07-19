@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, OverloadedStrings, BangPatterns #-}
 
 {-
   virtual-dom bindings demo, rendering a large pixel grid with a bouncing red
@@ -8,22 +8,21 @@
 
 module Main where
 
-import           Prelude hiding (div)
-
-import           Control.Concurrent
+import           Control.Monad
 
 import           Data.IntMap (IntMap)
 import qualified Data.IntMap as IM
-
-import           System.IO
+import qualified Data.JSString as JSS
 
 import           GHCJS.VDOM
 import           GHCJS.VDOM.QQ
-import           GHCJS.Foreign
+import qualified GHCJS.VDOM.Element as E
+
+import           GHCJS.Foreign.Callback
 import           GHCJS.Foreign.QQ
 import           GHCJS.Types
 
-import Control.Arrow
+import           JavaScript.Web.AnimationFrame (inAnimationFrame)
 
 red :: JSString
 red = "pixel-red"
@@ -61,57 +60,47 @@ step (State x y dx dy w h p) =
       p'  = setPixel x' y' red (setPixel x y white p)
    in State x' y' dx' dy' w h p'
 
-cls :: JSString -> Properties
-cls name = [pr| className: name |]
+cls :: JSString -> Attributes'
+cls name = [att| className: name |]
 
 render :: State -> VNode
-render s = div (cls "state") [ch|pixelDiv,numDiv|]
+render s = E.div (cls "state") [ch|pixelDiv,numDiv|]
     where
       xd       = textDiv (y s)
       yd       = textDiv (x s)
-      numDiv   = div (cls "numeric") [ch|xd,yd|]
-      pixelDiv = div (cls "pixels") . mkChildren $
-          map (renderRowM (w s) . (pixels s IM.!)) [0..h s-1]
+      numDiv   = E.div (cls "numeric") [ch|xd,yd|]
+      pixelDiv = E.div (cls "pixels")
+          (map (renderRowM (w s) . (pixels s IM.!)) [0..h s-1])
 
 textDiv :: Show a => a -> VNode
-textDiv x = div noProps [ch|c|]
+textDiv x = E.div () [ch|c|]
   where
-    c = text . toJSString . show $ x
+    c = E.text . JSS.pack . show $ x
 
-renderRowM = memo renderRow
+renderRowM !w !r = memo renderRow w r
 
 renderRow :: Int -> IntMap JSString -> VNode
 renderRow w r =
-  div [pr|className: 'row' |] . mkChildren $
-    map (renderPixelM r) [0..w-1]
+  E.div [att|className: 'row' |] (map (renderPixelM r) [0..w-1])
 
-renderPixelM = memo renderPixel
+renderPixelM !r !c = memo renderPixel r c
 
 renderPixel :: IntMap JSString -> Int -> VNode
-renderPixel r c = div (cls (r IM.! c)) noChildren
+renderPixel r c = E.div (cls (r IM.! c)) ()
 
-animate :: DOMNode -> VNode -> State -> IO ()
-animate n r s =
+animate :: VMount -> State -> IO ()
+animate m s =
   let s' = step s
       r' = render s'
-      p  = diff r r'
---  in  s' `seq` redraw n p >> threadDelay 20000 >> animate n r' s' -- for async calculation, sync repaint
-  in atAnimationFrame (patch n p >> animate n r' s') -- sync all
-
-redraw :: DOMNode -> Patch -> IO ()
-redraw node p = p `seq` atAnimationFrame (patch node p)
-
-atAnimationFrame :: IO () -> IO ()
-atAnimationFrame m = do
-  cb <- fixIO $ \cb ->
-    syncCallback AlwaysRetain False (release cb >> m)
-  [js_| window.requestAnimationFrame(`cb); |]
+  in do p <- diff m r'
+        void $ inAnimationFrame ContinueAsync (patch m p >> animate m s')
 
 main :: IO ()
 main = do
   root <- [js| document.createElement('div') |]
   [js_| document.body.appendChild(`root); |]
   let s = mkState 167 101 10 20
-  animate root emptyDiv s
+  m <- mount root (E.div () ())
+  animate m s
 
 

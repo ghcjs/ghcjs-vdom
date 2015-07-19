@@ -6,7 +6,6 @@
  */
 
 var isArray = require("x-is-array")
-var isObject = require("is-object")
 
 var VPatch = require("virtual-dom/vnode/vpatch")
 var isVNode = require("virtual-dom/vnode/is-vnode")
@@ -15,156 +14,87 @@ var isWidget = require("virtual-dom/vnode/is-widget")
 var isThunk = require("virtual-dom/vnode/is-thunk")
 var handleThunk = require("./handle-thunk")
 
+var diffProps = require("virtual-dom/vtree/diff-props")
+
 module.exports = diff
 
-// how to implement original behaviour for deferred thunks
-/*
-function diffOrig(a, b) {
-    var thunks = [];
-    var patch = diff(a, b, thunks);
-    if(thunks.length) {
-        var work = [];
-        var newThunks = [];
-        do {
-            for(var i=thunks.length-1;i>=0;i--) {
-                var t = thunks[i];
-                t.a.vnode = t.a.vnode || // call (custom?) render function here
-                t.b.vnode = t.b.vnode || // call (custom?) render function here
-                t.p[t.i] = diff(t.a.vnode, t.b.vnode, newThunks);
-                if(newThunks.length) {
-                    work.push(newThunks);
-                    newThunks = [];
-                }
-            }
-        } while(thunks = work.pop());
-    }
-    return patch;
-}
-*/
-// ...
-
-
+// unevaluated thunks are added to the thunks argument (array)
 function diff(a, b, thunks) {
-    var patch  = { a: a };
-    thunks = thunks || [];
+    if(!a) throw new Error ("diff a: " + a);
+    if(!a) throw new Error ("diff b: " + b);
+    var patch = { a: a }
     walk(a, b, patch, thunks, 0)
     return patch
 }
 
 function walk(a, b, patch, thunks, index) {
     if (a === b) {
-        if (isThunk(a) || isThunk(b)) {
-            doThunks(a, b, patch, thunks, index)
-        } else {
-            hooks(b, patch, index)
-        }
         return
     }
 
     var apply = patch[index]
+    var applyClear = false
 
-    if (b == null) {
-        apply = appendPatch(apply, new VPatch(VPatch.REMOVE, a, b))
-        destroyWidgets(a, patch, index)
-    } else if (isThunk(a) || isThunk(b)) {
+    if (isThunk(a) || isThunk(b)) {
         doThunks(a, b, patch, thunks, index)
+    } else if (b == null) {
+
+        // If a is a widget we will add a remove patch for it
+        // Otherwise any child widgets/hooks must be destroyed.
+        // This prevents adding two remove patches for a widget.
+        if (!isWidget(a)) {
+            clearState(a, patch, index)
+            apply = patch[index]
+        }
+
+        apply = appendPatch(apply, new VPatch(VPatch.REMOVE, a, b))
     } else if (isVNode(b)) {
         if (isVNode(a)) {
             if (a.tagName === b.tagName &&
                 a.namespace === b.namespace &&
                 a.key === b.key) {
-                var propsPatch = diffProps(a.properties, b.properties, b.hooks)
+                var propsPatch = diffProps(a.properties, b.properties)
                 if (propsPatch) {
                     apply = appendPatch(apply,
                         new VPatch(VPatch.PROPS, a, propsPatch))
                 }
+                apply = diffChildren(a, b, patch, apply, thunks, index)
             } else {
                 apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
-                destroyWidgets(a, patch, index)
+                applyClear = true
             }
-
-            apply = diffChildren(a, b, patch, apply, thunks, index)
         } else {
             apply = appendPatch(apply, new VPatch(VPatch.VNODE, a, b))
-            destroyWidgets(a, patch, index)
+            applyClear = true
         }
     } else if (isVText(b)) {
         if (!isVText(a)) {
             apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
-            destroyWidgets(a, patch, index)
+            applyClear = true
         } else if (a.text !== b.text) {
             apply = appendPatch(apply, new VPatch(VPatch.VTEXT, a, b))
         }
     } else if (isWidget(b)) {
-        apply = appendPatch(apply, new VPatch(VPatch.WIDGET, a, b))
-
         if (!isWidget(a)) {
-            destroyWidgets(a, patch, index)
+            applyClear = true
         }
+
+        apply = appendPatch(apply, new VPatch(VPatch.WIDGET, a, b))
     }
 
     if (apply) {
         patch[index] = apply
     }
-}
 
-function diffProps(a, b, hooks) {
-    var diff
-
-    for (var aKey in a) {
-        if (!(aKey in b)) {
-            diff = diff || {}
-            diff[aKey] = undefined
-        }
-
-        var aValue = a[aKey]
-        var bValue = b[aKey]
-
-        if (hooks && aKey in hooks) {
-            diff = diff || {}
-            diff[aKey] = bValue
-        } else {
-            if (isObject(aValue) && isObject(bValue)) {
-                if (getPrototype(bValue) !== getPrototype(aValue)) {
-                    diff = diff || {}
-                    diff[aKey] = bValue
-                } else {
-                    var objectDiff = diffProps(aValue, bValue)
-                    if (objectDiff) {
-                        diff = diff || {}
-                        diff[aKey] = objectDiff
-                    }
-                }
-            } else if (aValue !== bValue) {
-                diff = diff || {}
-                diff[aKey] = bValue
-            }
-        }
-    }
-
-    for (var bKey in b) {
-        if (!(bKey in a)) {
-            diff = diff || {}
-            diff[bKey] = b[bKey]
-        }
-    }
-
-    return diff
-}
-
-function getPrototype(value) {
-    if (Object.getPrototypeOf) {
-        return Object.getPrototypeOf(value)
-    } else if (value.__proto__) {
-        return value.__proto__
-    } else if (value.constructor) {
-        return value.constructor.prototype
+    if (applyClear) {
+        clearState(a, patch, index)
     }
 }
 
 function diffChildren(a, b, patch, apply, thunks, index) {
     var aChildren = a.children
-    var bChildren = reorder(aChildren, b.children)
+    var orderedSet = reorder(aChildren, b.children)
+    var bChildren = orderedSet.children
 
     var aLen = aChildren.length
     var bLen = bChildren.length
@@ -181,12 +111,6 @@ function diffChildren(a, b, patch, apply, thunks, index) {
                 apply = appendPatch(apply,
                     new VPatch(VPatch.INSERT, null, rightNode))
             }
-        } else if (!rightNode) {
-            if (leftNode) {
-                // Excess nodes in a need to be removed
-                patch[index] = new VPatch(VPatch.REMOVE, leftNode, null)
-                destroyWidgets(leftNode, patch, index)
-            }
         } else {
             walk(leftNode, rightNode, patch, thunks, index)
         }
@@ -196,12 +120,22 @@ function diffChildren(a, b, patch, apply, thunks, index) {
         }
     }
 
-    if (bChildren.moves) {
+    if (orderedSet.moves) {
         // Reorder nodes last
-        apply = appendPatch(apply, new VPatch(VPatch.ORDER, a, bChildren.moves))
+        apply = appendPatch(apply, new VPatch(
+            VPatch.ORDER,
+            a,
+            orderedSet.moves
+        ))
     }
 
     return apply
+}
+
+function clearState(vNode, patch, index) {
+    // TODO: Make this a single walk, not two
+    unhook(vNode, patch, index)
+    destroyWidgets(vNode, patch, index)
 }
 
 // Patch records for all destroyed widgets must be added because we need
@@ -209,9 +143,12 @@ function diffChildren(a, b, patch, apply, thunks, index) {
 function destroyWidgets(vNode, patch, index) {
     if (isWidget(vNode)) {
         if (typeof vNode.destroy === "function") {
-            patch[index] = new VPatch(VPatch.REMOVE, vNode, null)
+            patch[index] = appendPatch(
+                patch[index],
+                new VPatch(VPatch.REMOVE, vNode, null)
+            )
         }
-    } else if (isVNode(vNode) && vNode.hasWidgets) {
+    } else if (isVNode(vNode) && (vNode.hasWidgets || vNode.hasThunks)) {
         var children = vNode.children
         var len = children.length
         for (var i = 0; i < len; i++) {
@@ -224,6 +161,8 @@ function destroyWidgets(vNode, patch, index) {
                 index += child.count
             }
         }
+    } else if (isThunk(vNode)) {
+        doThunks(vNode, null, patch, thunks, index)
     }
 }
 
@@ -247,129 +186,248 @@ function doThunks(a, b, patch, thunks, index) {
 function hasPatches(patch) {
     for (var index in patch) {
         if (index !== "a") {
-            return true;
+            return true
         }
     }
-    return false;
+
+    return false
 }
 
 // Execute hooks when two nodes are identical
-function hooks(vNode, patch, index) {
+function unhook(vNode, patch, index) {
     if (isVNode(vNode)) {
         if (vNode.hooks) {
-            patch[index] = new VPatch(VPatch.PROPS, vNode.hooks, vNode.hooks)
+            patch[index] = appendPatch(
+                patch[index],
+                new VPatch(
+                    VPatch.PROPS,
+                    vNode,
+                    undefinedKeys(vNode.hooks)
+                )
+            )
         }
 
-        if (vNode.descendantHooks) {
+        if (vNode.descendantHooks || vNode.hasThunks) {
             var children = vNode.children
             var len = children.length
             for (var i = 0; i < len; i++) {
                 var child = children[i]
                 index += 1
 
-                hooks(child, patch, index)
+                unhook(child, patch, index)
 
                 if (isVNode(child) && child.count) {
                     index += child.count
                 }
             }
         }
+    } else if (isThunk(vNode)) {
+        doThunks(vNode, null, patch, thunks, index)
     }
+}
+
+function undefinedKeys(obj) {
+    var result = {}
+
+    for (var key in obj) {
+        result[key] = undefined
+    }
+
+    return result
 }
 
 // List diff, naive left to right reordering
 function reorder(aChildren, bChildren) {
+    // O(M) time, O(M) memory
+    var bChildIndex = keyIndex(bChildren)
+    var bKeys = bChildIndex.keys
+    var bFree = bChildIndex.free
 
-    var bKeys = keyIndex(bChildren)
-
-    if (!bKeys) {
-        return bChildren
+    if (bFree.length === bChildren.length) {
+        return {
+            children: bChildren,
+            moves: null
+        }
     }
 
-    var aKeys = keyIndex(aChildren)
+    // O(N) time, O(N) memory
+    var aChildIndex = keyIndex(aChildren)
+    var aKeys = aChildIndex.keys
+    var aFree = aChildIndex.free
 
-    if (!aKeys) {
-        return bChildren
+    if (aFree.length === aChildren.length) {
+        return {
+            children: bChildren,
+            moves: null
+        }
     }
 
-    var bMatch = {}, aMatch = {}
+    // O(MAX(N, M)) memory
+    var newChildren = []
 
-    for (var key in bKeys) {
-        bMatch[bKeys[key]] = aKeys[key]
-    }
-
-    for (var key in aKeys) {
-        aMatch[aKeys[key]] = bKeys[key]
-    }
-
-    var aLen = aChildren.length
-    var bLen = bChildren.length
-    var len = aLen > bLen ? aLen : bLen
-    var shuffle = []
     var freeIndex = 0
-    var i = 0
-    var moveIndex = 0
-    var moves = {}
-    var removes = moves.removes = {}
-    var reverse = moves.reverse = {}
-    var hasMoves = false
+    var freeCount = bFree.length
+    var deletedItems = 0
 
-    while (freeIndex < len) {
-        var move = aMatch[i]
-        if (move !== undefined) {
-            shuffle[i] = bChildren[move]
-            if (move !== moveIndex) {
-                moves[move] = moveIndex
-                reverse[moveIndex] = move
-                hasMoves = true
+    // Iterate through a and match a node in b
+    // O(N) time,
+    for (var i = 0 ; i < aChildren.length; i++) {
+        var aItem = aChildren[i]
+        var itemIndex
+
+        if (aItem.key) {
+            if (bKeys.hasOwnProperty(aItem.key)) {
+                // Match up the old keys
+                itemIndex = bKeys[aItem.key]
+                newChildren.push(bChildren[itemIndex])
+
+            } else {
+                // Remove old keyed items
+                itemIndex = i - deletedItems++
+                newChildren.push(null)
             }
-            moveIndex++
-        } else if (i in aMatch) {
-            shuffle[i] = undefined
-            removes[i] = moveIndex++
-            hasMoves = true
         } else {
-            while (bMatch[freeIndex] !== undefined) {
-                freeIndex++
-            }
-
-            if (freeIndex < len) {
-                var freeChild = bChildren[freeIndex]
-                if (freeChild) {
-                    shuffle[i] = freeChild
-                    if (freeIndex !== moveIndex) {
-                        hasMoves = true
-                        moves[freeIndex] = moveIndex
-                        reverse[moveIndex] = freeIndex
-                    }
-                    moveIndex++
-                }
-                freeIndex++
+            // Match the item in a with the next free item in b
+            if (freeIndex < freeCount) {
+                itemIndex = bFree[freeIndex++]
+                newChildren.push(bChildren[itemIndex])
+            } else {
+                // There are no free items in b to match with
+                // the free items in a, so the extra free nodes
+                // are deleted.
+                itemIndex = i - deletedItems++
+                newChildren.push(null)
             }
         }
-        i++
     }
 
-    if (hasMoves) {
-        shuffle.moves = moves
+    var lastFreeIndex = freeIndex >= bFree.length ?
+        bChildren.length :
+        bFree[freeIndex]
+
+    // Iterate through b and append any new keys
+    // O(M) time
+    for (var j = 0; j < bChildren.length; j++) {
+        var newItem = bChildren[j]
+
+        if (newItem.key) {
+            if (!aKeys.hasOwnProperty(newItem.key)) {
+                // Add any new keyed items
+                // We are adding new items to the end and then sorting them
+                // in place. In future we should insert new items in place.
+                newChildren.push(newItem)
+            }
+        } else if (j >= lastFreeIndex) {
+            // Add any leftover non-keyed items
+            newChildren.push(newItem)
+        }
     }
 
-    return shuffle
+    var simulate = newChildren.slice()
+    var simulateIndex = 0
+    var removes = []
+    var inserts = []
+    var simulateItem
+
+    for (var k = 0; k < bChildren.length;) {
+        var wantedItem = bChildren[k]
+        simulateItem = simulate[simulateIndex]
+
+        // remove items
+        while (simulateItem === null && simulate.length) {
+            removes.push(remove(simulate, simulateIndex, null))
+            simulateItem = simulate[simulateIndex]
+        }
+
+        if (!simulateItem || simulateItem.key !== wantedItem.key) {
+            // if we need a key in this position...
+            if (wantedItem.key) {
+                if (simulateItem && simulateItem.key) {
+                    // if an insert doesn't put this key in place, it needs to move
+                    if (bKeys[simulateItem.key] !== k + 1) {
+                        removes.push(remove(simulate, simulateIndex, simulateItem.key))
+                        simulateItem = simulate[simulateIndex]
+                        // if the remove didn't put the wanted item in place, we need to insert it
+                        if (!simulateItem || simulateItem.key !== wantedItem.key) {
+                            inserts.push({key: wantedItem.key, to: k})
+                        }
+                        // items are matching, so skip ahead
+                        else {
+                            simulateIndex++
+                        }
+                    }
+                    else {
+                        inserts.push({key: wantedItem.key, to: k})
+                    }
+                }
+                else {
+                    inserts.push({key: wantedItem.key, to: k})
+                }
+                k++
+            }
+            // a key in simulate has no matching wanted key, remove it
+            else if (simulateItem && simulateItem.key) {
+                removes.push(remove(simulate, simulateIndex, simulateItem.key))
+            }
+        }
+        else {
+            simulateIndex++
+            k++
+        }
+    }
+
+    // remove all the remaining nodes from simulate
+    while(simulateIndex < simulate.length) {
+        simulateItem = simulate[simulateIndex]
+        removes.push(remove(simulate, simulateIndex, simulateItem && simulateItem.key))
+    }
+
+    // If the only moves we have are deletes then we can just
+    // let the delete patch remove these items.
+    if (removes.length === deletedItems && !inserts.length) {
+        return {
+            children: newChildren,
+            moves: null
+        }
+    }
+
+    return {
+        children: newChildren,
+        moves: {
+            removes: removes,
+            inserts: inserts
+        }
+    }
+}
+
+function remove(arr, index, key) {
+    arr.splice(index, 1)
+
+    return {
+        from: index,
+        key: key
+    }
 }
 
 function keyIndex(children) {
-    var i, keys
+    var keys = {}
+    var free = []
+    var length = children.length
 
-    for (i = 0; i < children.length; i++) {
+    for (var i = 0; i < length; i++) {
         var child = children[i]
 
-        if (child.key !== undefined) {
-            keys = keys || {}
+        if (child.key) {
             keys[child.key] = i
+        } else {
+            free.push(i)
         }
     }
 
-    return keys
+    return {
+        keys: keys,     // A hash of key name to index
+        free: free      // An array of unkeyed item indices
+    }
 }
 
 function appendPatch(apply, patch) {
