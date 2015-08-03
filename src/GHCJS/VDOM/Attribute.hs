@@ -2,6 +2,7 @@
 
 module GHCJS.VDOM.Attribute ( Attribute
                             , Attributes
+                            , mkAttribute
                               -- * some predefined attributes
                             , class_
                             , id
@@ -35,3 +36,6 @@ mkAttrs' ''JSString [ ("class_", "className")
                     ]
 
 mkAttrs ''Int [ "key", "width", "height" ]
+
+mkAttribute :: JSString -> JSRef () -> Attribute
+mkAttribute = Attribute
