@@ -84,7 +84,7 @@ flushPatches r =
                       (\m -> (M.empty, M.elems m))
 
 enqueueRender :: Renderer
-              -> JSRef ()
+              -> JSRef
               -> IO ()
               -> IO ()
               -> IO ()
@@ -94,11 +94,11 @@ enqueueRender r renderable compute flush = do
                          (\m -> (M.insert k (compute, flush) m, m))
   when (M.notMember k m) (writeChan (renderQueue r) k)
 
-renderableKey :: JSRef () -> IO Double
+renderableKey :: JSRef -> IO Double
 renderableKey r = [jsu| `r._key |]
 
-addPatch :: JSRef () -> Patch -> IO ()
+addPatch :: JSRef -> Patch -> IO ()
 addPatch r (Patch p) = [jsu_| `r.addPatch(`p); |]
 
-flushPatch :: JSRef () -> IO ()
+flushPatch :: JSRef -> IO ()
 flushPatch r = [jsu_| `r.patch(null); |]

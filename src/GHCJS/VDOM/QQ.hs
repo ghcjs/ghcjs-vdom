@@ -37,7 +37,7 @@ attributes = QuasiQuoter { quoteExp = quoteProps }
 
 quoteProps :: String -> Q Exp
 quoteProps pat = jsExpQQ ('{':ffiPat++"}") (map mkName names)
-                 (\x -> AppE (VarE 'castRef) (AppE (VarE 'unsafePerformIO) (AppE (VarE 'toJSRef) x)))
+                 (\x -> AppE (VarE 'unsafePerformIO) (AppE (VarE 'toJSRef) x))
                  (AppE (ConE 'Attributes'))
   where
     (names, ffiPat) = genpat 1 $ map (break (==':') . trim) (linesBy (==',') pat)

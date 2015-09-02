@@ -25,6 +25,7 @@ import GHCJS.Prim
 import GHCJS.Marshal.Pure
 
 import Control.Monad
+import Data.Coerce
 
 import System.IO.Unsafe
 
@@ -40,7 +41,7 @@ instance MemoNode VNode
     memoNode (_,[],a) = a
     memoNode (k,xs,v) =
       let vd     = I.unsafeExportValue v
-          xs1    = unsafePerformIO (toJSArray xs)
+          xs1    = unsafePerformIO (toJSArray $ coerce xs)
       in VNode [j| h$vdom.th(`vd, `xs1, `k, true) |]
     {-# INLINE memoNode #-}
 
@@ -50,7 +51,7 @@ instance MemoNode b => MemoNode (a -> b)
     {-# INLINE memoNode #-}
 
 memoKey :: MemoNode a => JSString -> a -> a
-memoKey k = memo' (castRef $ pToJSRef k)
+memoKey k = memo' (pToJSRef k)
 {-# NOINLINE memoKey #-}
 
 memo :: MemoNode a => a -> a
