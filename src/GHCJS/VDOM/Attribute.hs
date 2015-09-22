@@ -12,6 +12,7 @@ module GHCJS.VDOM.Attribute ( Attribute
                             , name
                             , target
                             , value
+                            , style
                             , width
                             , height
                             , title
@@ -28,7 +29,7 @@ import GHCJS.VDOM.Internal.Types
 import GHCJS.VDOM.Internal
 
 mkAttrs ''JSString [ "id", "href", "src", "alt", "title"
-                   , "lang", "name", "target", "value"
+                   , "lang", "name", "target", "value", "style"
                    ]
 
 mkAttrs' ''JSString [ ("class_", "className")
@@ -37,5 +38,5 @@ mkAttrs' ''JSString [ ("class_", "className")
 
 mkAttrs ''Int [ "key", "width", "height" ]
 
-mkAttribute :: JSString -> JSRef () -> Attribute
+mkAttribute :: JSString -> JSRef -> Attribute
 mkAttribute = Attribute

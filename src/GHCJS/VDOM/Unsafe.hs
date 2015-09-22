@@ -17,7 +17,7 @@ import GHCJS.VDOM.Internal.Types
 
    FIXME what do we need to always be able to find Haskell callbacks?
  -}
-unsafeToAttributes :: JSRef () -> Attributes'
+unsafeToAttributes :: JSRef -> Attributes'
 unsafeToAttributes = Attributes'
 
 {-|
@@ -28,5 +28,5 @@ unsafeToAttributes = Attributes'
    if you use other node types, the extensible retention (see scanTree in
    virtual-dom/lib.require.js) must be extended.
  -}
-unsafeToChildren :: JSRef () -> Children'
+unsafeToChildren :: JSRef -> Children'
 unsafeToChildren = Children'
