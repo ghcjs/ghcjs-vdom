@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
 
-module GHCJS.VDOM.Attribute ( Attribute
+module GHCJS.VDOM.Attribute ( Attribute(..)
                             , Attributes
                             , mkAttribute
                               -- * some predefined attributes
