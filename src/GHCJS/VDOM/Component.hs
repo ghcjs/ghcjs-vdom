@@ -1,7 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE GHCForeignImportPrim #-}
-{-# LANGUAGE UnliftedFFITypes #-}
 
 module GHCJS.VDOM.Component ( VComp
                             , toNode
@@ -21,6 +19,8 @@ import qualified GHCJS.VDOM.Internal       as I
 import           GHCJS.VDOM.Internal       (j)
 import qualified GHCJS.VDOM.Internal.Thunk as I
 
+import qualified GHC.Exts as Exts
+import           Unsafe.Coerce
 
 toNode :: VComp -> VNode
 toNode (VComp v) = VNode v
@@ -34,10 +34,10 @@ mkComponent r = do
   return c
 
 foreign import javascript unsafe "$1.hsRender"
-  js_hsRender :: VComp -> (# IO VNode #)
+  js_hsRender :: VComp -> IO Exts.Any
 
 render :: VComp -> IO VNode
-render c = case js_hsRender c of (# x #) -> x
+render c = unsafeCoerce <$> js_hsRender c
 {-# INLINE render #-}
 
 diff :: VComp -> VNode -> IO Patch

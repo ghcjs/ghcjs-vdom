@@ -93,7 +93,7 @@ animate m s =
   let s' = step s
       r' = render s'
   in do p <- diff m r'
-        void $ inAnimationFrame ContinueAsync (patch m p >> animate m s')
+        void $ inAnimationFrame ContinueAsync (\_ -> patch m p >> animate m s')
 
 main :: IO ()
 main = do
