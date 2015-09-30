@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, QuasiQuotes, LambdaCase #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes, LambdaCase, GHCForeignImportPrim #-}
 {-|
    Code that deals with forcing thunks in virtual-dom trees. When
    computing a diff, the virtual-dom code returns a list of thunks
@@ -14,6 +14,7 @@ import GHCJS.Prim
 import Control.Exception
 import Control.Monad
 
+import GHC.Exts (Any)
 import Unsafe.Coerce
 
 import           GHCJS.VDOM.Internal       (j,J)
@@ -43,7 +44,7 @@ forceThunkNode :: J -> IO ()
 forceThunkNode x =
   [jsu| `x && `x.hst && !`x.vnode |] >>= \case
     True -> do
-      (VNode u) <- evaluate . unsafeCoerce =<< I.getThunk x
+      (VNode u) <- fmap unsafeCoerce . js_toHeapObject =<< I.getThunk x
       [jsu| `x.hst = null;
             `x.vnode = `u;
           |]
@@ -66,3 +67,5 @@ forceTree (x:xs) = do
     return newThunks
   forceTree (filter (\a -> [jsu'| `a.length !== 0 |]) ys ++ xs)
 
+foreign import javascript unsafe
+  "$r = $1;" js_toHeapObject :: JSRef -> IO Any
