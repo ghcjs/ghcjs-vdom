@@ -145,7 +145,7 @@ js_vnode tag (Attributes' props) (Children' children) =
 getThunk :: J -> IO J
 getThunk x = IO (js_getThunk x)
 
-foreign import javascript unsafe "$1.hst"
+foreign import javascript unsafe "$r = $1.hst;"
   js_getThunk :: J -> State# RealWorld -> (# State# RealWorld, J #)
 
 -- -----------------------------------------------------------------------------

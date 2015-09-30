@@ -31,8 +31,6 @@ import           Control.Monad
 
 import           System.IO
 
-type J = JSRef ()
-
 {-
   example virtual-dom component:
   a simple counter component that increments on click
@@ -65,8 +63,8 @@ mkScroller :: JSString -> Int -> IO Scroller
 mkScroller txt k = do
   mounts <- newIORef M.empty
   let mountScroller m = do
-        (n::J) <- [js| document.createElement('div') |]
-        (t::J) <- [js| document.createTextNode(`txt) |]
+        (n::JSRef) <- [js| document.createElement('div') |]
+        (t::JSRef) <- [js| document.createTextNode(`txt) |]
         [jsu_| `n.appendChild(`t); |]
         thr <- forkIO . forever $ do
            threadDelay 200000

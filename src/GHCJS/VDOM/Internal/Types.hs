@@ -21,22 +21,21 @@ import           Unsafe.Coerce
 
 -- do not export the constructors for these, this ensures that the objects are opaque
 -- and cannot be mutated
-newtype VNode      = VNode      { unVNode      :: JSRef  }
-newtype VComp      = VComp      { unVComp      :: JSRef  }
-newtype DComp      = DComp      { unDComp      :: JSRef  }
-newtype Patch      = Patch      { unPatch      :: JSRef  }
-newtype VMount     = VMount     { unVMount     :: JSRef  }
+newtype VNode      = VNode      { unVNode      :: JSRef }
+newtype VComp      = VComp      { unVComp      :: JSRef }
+newtype DComp      = DComp      { unDComp      :: JSRef }
+newtype Patch      = Patch      { unPatch      :: JSRef }
+newtype VMount     = VMount     { unVMount     :: JSRef }
 
-data JSIdent_
+-- fixme: make newtype?
+-- newtype JSIdent = JSIdent JSRef
+-- newtype DOMNode = DOMNode JSRef
 type JSIdent = JSRef
-data DOMNode_
 type DOMNode = JSRef
+
 
 class Attributes a where
   mkAttributes :: a -> Attributes'
-
-
-
 newtype Attributes' = Attributes' JSRef
 
 data Attribute = Attribute JSString JSRef

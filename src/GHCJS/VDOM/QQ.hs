@@ -78,7 +78,7 @@ jsExpQQ pat args unwrap wrap = do
       ty :: Int -> Type
       ty 0         = ref
       ty n         = AppT (AppT ArrowT ref) (ty (n-1))
-      ref          = AppT (ConT ''JSRef) (ConT ''())
+      ref          = ConT ''JSRef
       ffiCall []     = (VarE n)
       ffiCall (y:ys) = AppE (ffiCall ys) (unwrap (VarE y))
       pat'           = "__ghcjs_javascript_" ++ L.intercalate "_" (map (show . ord) pat)

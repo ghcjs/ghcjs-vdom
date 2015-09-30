@@ -74,7 +74,7 @@ renderThread r = forever $ do
         m <- atomicModifyIORef (renderFlushPending r)
                                (\m -> (M.insert k flush m, m))
         when (M.null m) (void $ inAnimationFrame ThrowWouldBlock
-                                                 (flushPatches r))
+                                                 (\_ -> flushPatches r))
   actions`E.catch` \(_::E.SomeException) -> return ()
 
 flushPatches :: Renderer -> IO ()
