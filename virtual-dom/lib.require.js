@@ -437,6 +437,7 @@ var vdomMounts = new h$Set();
 module.exports = { setThunkPatch: setThunkPatch
                  , forceTree:     forceTree
                  , forcePatch:    forcePatch
+                 , diff:          diff
                  , mount:         mount
                  , unmount:       unmount
                  , initDelegator: initDelegator

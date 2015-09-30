@@ -17,6 +17,7 @@ import qualified Data.JSString as JSS
 import           GHCJS.VDOM
 import           GHCJS.VDOM.QQ
 import qualified GHCJS.VDOM.Element as E
+import qualified GHCJS.VDOM.Attribute as A
 
 import           GHCJS.Foreign.Callback
 import           GHCJS.Foreign.QQ
@@ -81,7 +82,7 @@ renderRowM !w !r = memo renderRow w r
 
 renderRow :: Int -> IntMap JSString -> VNode
 renderRow w r =
-  E.div [att|className: 'row' |] (map (renderPixelM r) [0..w-1])
+  E.div (A.class_ "row", A.lang "EN") (map (renderPixelM r) [0..w-1])
 
 renderPixelM !r !c = memo renderPixel r c
 
