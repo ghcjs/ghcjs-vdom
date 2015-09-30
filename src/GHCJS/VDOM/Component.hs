@@ -37,12 +37,12 @@ mkComponent r = do
   void $ patch c =<< diff c =<< render c
   return c
 
-foreign import javascript unsafe "$1.hsRender"
+foreign import javascript unsafe "$r = $1.hsRender;"
   js_hsRender :: VComp -> State# RealWorld -> (# State# RealWorld, Any #)
 
 render :: VComp -> IO VNode
-render c = IO $ \s -> case js_hsRender c s of
-  (# s', r #) -> (# s', unsafeCoerce r #)
+render c = join $ IO (\s -> case js_hsRender c s of
+  (# s', r #) -> (# s', unsafeCoerce r #))
 {-# INLINE render #-}
 
 diff :: VComp -> VNode -> IO Patch
