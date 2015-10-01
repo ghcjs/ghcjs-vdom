@@ -4,7 +4,8 @@
  -}
 module GHCJS.VDOM.Unsafe ( Attributes(..),       Children(..)
                          , Attributes',          Children'
-                         , unsafeToAttributes,   unsafeToChildren ) where
+                         , unsafeToAttributes,   unsafeToChildren
+                         , Attribute(..) ) where
 
 import GHCJS.Types
 
