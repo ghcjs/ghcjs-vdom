@@ -16,28 +16,28 @@ import           Unsafe.Coerce
 
 -- do not export the constructors for these, this ensures that the objects are opaque
 -- and cannot be mutated
-newtype VNode      = VNode      { unVNode      :: JSRef }
-newtype VComp      = VComp      { unVComp      :: JSRef }
-newtype DComp      = DComp      { unDComp      :: JSRef }
-newtype Patch      = Patch      { unPatch      :: JSRef }
-newtype VMount     = VMount     { unVMount     :: JSRef }
+newtype VNode      = VNode      { unVNode      :: JSVal }
+newtype VComp      = VComp      { unVComp      :: JSVal }
+newtype DComp      = DComp      { unDComp      :: JSVal }
+newtype Patch      = Patch      { unPatch      :: JSVal }
+newtype VMount     = VMount     { unVMount     :: JSVal }
 
 -- fixme: make newtype?
--- newtype JSIdent = JSIdent JSRef
--- newtype DOMNode = DOMNode JSRef
-type JSIdent = JSRef
-type DOMNode = JSRef
+-- newtype JSIdent = JSIdent JSVal
+-- newtype DOMNode = DOMNode JSVal
+type JSIdent = JSVal
+type DOMNode = JSVal
 
 
 class Attributes a where
   mkAttributes :: a -> Attributes'
-newtype Attributes' = Attributes' JSRef
+newtype Attributes' = Attributes' JSVal
 
-data Attribute = Attribute JSString JSRef
+data Attribute = Attribute JSString JSVal
 
 class Children a where
   mkChildren :: a -> Children'
-newtype Children' = Children' { unChildren :: JSRef }
+newtype Children' = Children' { unChildren :: JSVal }
 
 instance Children Children' where
   mkChildren x = x

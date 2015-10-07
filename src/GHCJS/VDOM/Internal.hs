@@ -31,7 +31,7 @@ import Data.Typeable
 import GHC.IO           ( IO(..) )
 import GHC.Base         ( StableName# )
 
-type J = JSRef
+type J = JSVal
 
 j :: QuasiQuoter
 j = jsu'
@@ -65,7 +65,7 @@ mkAttr :: Name -> String -> String -> Q [Dec]
 mkAttr ty name attr = do
   let n = mkName name
   x <- newName "x"
-  b <- [| \y -> Attribute attr (pToJSRef y) |]
+  b <- [| \y -> Attribute attr (pToJSVal y) |]
   return [ SigD n (AppT (AppT ArrowT (ConT ty)) (ConT ''Attribute))
          , FunD n [Clause [VarP x] (NormalB (AppE b (VarE x))) []]
          , PragmaD (InlineP n Inline FunLike AllPhases)
@@ -78,7 +78,7 @@ mkEventTypes base = fmap concat . mapM mk
       let nn     = mkName n
           mkI cn = InstanceD [] (AppT (ConT cn) (ConT nn)) []
           insts  = map mkI (base : cls)
-      jsr <- [t| JSRef |]
+      jsr <- [t| JSVal |]
       return $ (NewtypeD [] nn [] (NormalC nn [(NotStrict, jsr)]) [''Typeable]) : insts
 
 newtype CreatedEvents = CreatedEvents { unCreatedEvents :: [String] }
@@ -115,8 +115,8 @@ mkEvent dcon name attr = do
          , PragmaD (InlineP n Inline FunLike AllPhases)
          ]
 
--- a must be a newtype of JSRef!
-mkEventAttr :: JSString -> (JSRef -> a) -> (a -> IO ()) -> Attribute
+-- a must be a newtype of JSVal!
+mkEventAttr :: JSString -> (JSVal -> a) -> (a -> IO ()) -> Attribute
 mkEventAttr attr _wrap h =
   
   let e  = unsafeExportValue h
@@ -125,7 +125,7 @@ mkEventAttr attr _wrap h =
 {-# INLINE mkEventAttr #-}
 
 {-
-eventLogger :: JSRef ()
+eventLogger :: JSVal ()
 eventLogger = [js'| function(ev) { console.log("event caught"); } |]
 -}
 
@@ -152,12 +152,12 @@ foreign import javascript unsafe "$r = $1.hst;"
 {-|
    Export an arbitrary Haskell value to JS.
 
-   be careful with these JSRef values, losing track of them will result in
+   be careful with these JSVal values, losing track of them will result in
    incorrect memory management. As long as we keep the values directly in
    a Property or VNode, the ghcjs-vdom extensible retention system will know
    where to find them.
  -}
-unsafeExportValue :: a -> JSRef
+unsafeExportValue :: a -> JSVal
 unsafeExportValue x = js_export (unsafeCoerce x)
 {-# INLINE unsafeExportValue #-}
 
@@ -174,7 +174,7 @@ objectIdent x = x `seq` js_makeObjectIdent (unsafeExportValue x)
 -}
 {-# INLINE objectIdent #-}
                              
-foreign import javascript unsafe "$r = $1;" js_export    :: Any -> JSRef
+foreign import javascript unsafe "$r = $1;" js_export    :: Any -> JSVal
 foreign import javascript unsafe "$r = $1;" js_convertSn :: StableName# a -> JSIdent
 
-foreign import javascript unsafe "h$makeStableName($1)" js_makeObjectIdent :: JSRef -> JSIdent
+foreign import javascript unsafe "h$makeStableName($1)" js_makeObjectIdent :: JSVal -> JSIdent

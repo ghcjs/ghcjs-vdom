@@ -29,8 +29,8 @@ toNode :: DComp -> VNode
 toNode (DComp v) = VNode v
 {-# INLINE toNode #-}
 
-mkComponent :: (Int -> IO JSRef)     -- ^ mount action, return a DOM node
-            -> (Int -> JSRef -> IO ()) -- ^ unmount action
+mkComponent :: (Int -> IO JSVal)     -- ^ mount action, return a DOM node
+            -> (Int -> JSVal -> IO ()) -- ^ unmount action
             -> IO DComp
 mkComponent mount unmount =
   let mountE   = I.unsafeExportValue (mountComponent mount)
@@ -38,10 +38,10 @@ mkComponent mount unmount =
   in  DComp <$> [jsu| h$vdom.c(null, `mountE, `unmountE, null) |]
 
 
-mountComponent :: (Int -> IO JSRef) -> JSRef -> JSRef -> IO ()
+mountComponent :: (Int -> IO JSVal) -> JSVal -> JSVal -> IO ()
 mountComponent f mnt c = do
-  node <- f (pFromJSRef mnt)
+  node <- f (pFromJSVal mnt)
   [jsu| `c.updateMount(`mnt, `node); |]
 
-unmountComponent :: (Int -> JSRef -> IO ()) -> JSRef -> JSRef -> IO ()
-unmountComponent f mnt node = f (pFromJSRef mnt) node
+unmountComponent :: (Int -> JSVal -> IO ()) -> JSVal -> JSVal -> IO ()
+unmountComponent f mnt node = f (pFromJSVal mnt) node

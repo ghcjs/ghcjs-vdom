@@ -37,7 +37,7 @@ attributes = QuasiQuoter { quoteExp = quoteProps }
 
 quoteProps :: String -> Q Exp
 quoteProps pat = jsExpQQ ('{':ffiPat++"}") (map mkName names)
-                 (\x -> AppE (VarE 'unsafePerformIO) (AppE (VarE 'toJSRef) x))
+                 (\x -> AppE (VarE 'unsafePerformIO) (AppE (VarE 'toJSVal) x))
                  (AppE (ConE 'Attributes'))
   where
     (names, ffiPat) = genpat 1 $ map (break (==':') . trim) (linesBy (==',') pat)
@@ -78,7 +78,7 @@ jsExpQQ pat args unwrap wrap = do
       ty :: Int -> Type
       ty 0         = ref
       ty n         = AppT (AppT ArrowT ref) (ty (n-1))
-      ref          = ConT ''JSRef
+      ref          = ConT ''JSVal
       ffiCall []     = (VarE n)
       ffiCall (y:ys) = AppE (ffiCall ys) (unwrap (VarE y))
       pat'           = "__ghcjs_javascript_" ++ L.intercalate "_" (map (show . ord) pat)

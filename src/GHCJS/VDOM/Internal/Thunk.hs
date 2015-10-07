@@ -68,4 +68,4 @@ forceTree (x:xs) = do
   forceTree (filter (\a -> [jsu'| `a.length !== 0 |]) ys ++ xs)
 
 foreign import javascript unsafe
-  "$r = $1;" js_toHeapObject :: JSRef -> IO Any
+  "$r = $1;" js_toHeapObject :: JSVal -> IO Any

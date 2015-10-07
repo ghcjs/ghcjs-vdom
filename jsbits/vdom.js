@@ -6,7 +6,7 @@
 var h$vdom;
 
 function h$vdomEventCallback(async, action, ev) {
-  var a = MK_AP1(action, MK_JSREF(ev));
+  var a = MK_AP1(action, MK_JSVAL(ev));
   if(async) {
     h$run(a);
   } else {
@@ -15,9 +15,9 @@ function h$vdomEventCallback(async, action, ev) {
 }
 
 function h$vdomMountComponentCallback(action, mnt, comp) {
-  h$run(MK_AP2(action, MK_JSREF(mnt), MK_JSREF(comp)));
+  h$run(MK_AP2(action, MK_JSVAL(mnt), MK_JSVAL(comp)));
 }
 
 function h$vdomUnmountComponentCallback(action, mnt, node) {
-  h$run(MK_AP2(action, MK_JSREF(mnt), MK_JSREF(node)));
+  h$run(MK_AP2(action, MK_JSVAL(mnt), MK_JSVAL(node)));
 }
