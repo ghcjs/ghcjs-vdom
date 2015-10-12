@@ -51,7 +51,7 @@ instance MemoNode b => MemoNode (a -> b)
     {-# INLINE memoNode #-}
 
 memoKey :: MemoNode a => JSString -> a -> a
-memoKey k = memo' (pToJSRef k)
+memoKey k = memo' (pToJSVal k)
 {-# NOINLINE memoKey #-}
 
 memo :: MemoNode a => a -> a

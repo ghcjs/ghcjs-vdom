@@ -63,8 +63,8 @@ mkScroller :: JSString -> Int -> IO Scroller
 mkScroller txt k = do
   mounts <- newIORef M.empty
   let mountScroller m = do
-        (n::JSRef) <- [js| document.createElement('div') |]
-        (t::JSRef) <- [js| document.createTextNode(`txt) |]
+        (n::JSVal) <- [js| document.createElement('div') |]
+        (t::JSVal) <- [js| document.createTextNode(`txt) |]
         [jsu_| `n.appendChild(`t); |]
         thr <- forkIO . forever $ do
            threadDelay 200000

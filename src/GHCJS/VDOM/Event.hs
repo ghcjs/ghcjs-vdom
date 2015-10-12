@@ -92,7 +92,7 @@ initEventDelegation eventTypes = do
   a <- toJSArray (unsafeCoerce eventTypes)
   [jsu_| h$vdom.initDelegator(`a); |]
 
-class Coercible a JSRef => Event_ a
+class Coercible a JSVal => Event_ a
 class Event_ a          => KeyModEvent_ a
 class Event_ a          => MouseEvent_ a
 class Event_ a          => FocusEvent_ a
@@ -124,7 +124,7 @@ mkEvents 'WheelEvent [ "wheel" ]
 
 mkEvents 'Event [ "submit", "change" ]
 
-er :: Event_ a => (JSRef -> b) -> a -> b
+er :: Event_ a => (JSVal -> b) -> a -> b
 er f x = f (coerce x)
 
 -- -----------------------------------------------------------------------------

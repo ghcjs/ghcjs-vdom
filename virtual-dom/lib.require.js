@@ -15,7 +15,7 @@
    GHCJS needs to know reachable all Haskell values. ghcjs-vdom stores some
    Haskell values inside JavaScript references and uses extensible retention
    to collect these values. It's crucial that all data structures that may
-   contain Haskell values are stored directly in a JSRef and not inside other
+   contain Haskell values are stored directly in a JSVal and not inside other
    JS data structures.
 
    The recognized types are:
