@@ -39,7 +39,7 @@ mkAttrs' ''JSString [ ("class_", "className")
 
 mkAttrs ''Int [ "key", "width", "height" ]
 
-mkAttribute :: JSString -> JSRef -> Attribute
+mkAttribute :: JSString -> JSVal -> Attribute
 mkAttribute = Attribute
 
 -- | For Proper Attributes in VDOM they must turn into an object
