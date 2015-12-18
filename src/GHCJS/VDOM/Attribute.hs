@@ -5,6 +5,7 @@ module GHCJS.VDOM.Attribute ( Attribute
                             , custom
                               -- * some predefined attributes
                             , class_
+                            , style
                             , id
                             , href
                             , alt
@@ -30,7 +31,7 @@ import GHCJS.VDOM.Internal
 custom :: JSString -> JSVal -> Attribute
 custom = Attribute
 
-mkAttrs ''JSString [ "id", "href", "src", "alt", "title"
+mkAttrs ''JSString [ "id", "href", "src", "alt", "title", "style"
                    , "lang", "name", "target", "value"
                    ]
 
