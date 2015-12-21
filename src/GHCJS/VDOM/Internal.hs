@@ -61,13 +61,16 @@ mkAttrs ty = fmap concat . mapM (join (mkAttr ty))
 mkAttrs' :: Name -> [(String, String)] -> Q [Dec]
 mkAttrs' ty = fmap concat . mapM (uncurry (mkAttr ty))
 
+-- mkAttr ''Int foo bar
+-- Generates      foo :: Int -> Attribute
+--                foo x = (Attribute bar (pToJSVal x))
 mkAttr :: Name -> String -> String -> Q [Dec]
 mkAttr ty name attr = do
   let n = mkName name
   x <- newName "x"
   b <- [| \y -> Attribute attr (pToJSVal y) |]
-  return [ SigD n (AppT (AppT ArrowT (ConT ty)) (ConT ''Attribute))
-         , FunD n [Clause [VarP x] (NormalB (AppE b (VarE x))) []]
+  return [ SigD n (AppT (AppT ArrowT (ConT ty)) (ConT ''Attribute)) -- `name :: ((`ty -> Attribute))
+         , FunD n [Clause [VarP x] (NormalB (AppE b (VarE x))) []]  -- `name= (\y -> Attribute `attr (pToJSVal y))
          , PragmaD (InlineP n Inline FunLike AllPhases)
          ]
 
@@ -118,7 +121,7 @@ mkEvent dcon name attr = do
 -- a must be a newtype of JSVal!
 mkEventAttr :: JSString -> (JSVal -> a) -> (a -> IO ()) -> Attribute
 mkEventAttr attr _wrap h =
-  
+
   let e  = unsafeExportValue h
       h' = [js'| h$vdom.makeHandler(`e, false) |]
   in  h' `seq` Attribute attr h'
@@ -136,7 +139,7 @@ mkDefaultEvents = do
   nil  <- [| [] |]
   cons <- [| (:) |]
   return $ foldl' (\xs e -> AppE (AppE cons (LitE . stringL $ e)) xs) nil evs
-  
+
 js_vnode :: JSString -> Attributes' -> Children' -> VNode
 js_vnode tag (Attributes' props) (Children' children) =
   VNode [jsu'| h$vdom.v(`tag, `props, `children) |]
@@ -173,7 +176,7 @@ objectIdent x = x `seq` js_makeObjectIdent (unsafeExportValue x)
   case makeStableName# x s of (# s', sn #) -> (# s', js_convertSn sn #)
 -}
 {-# INLINE objectIdent #-}
-                             
+
 foreign import javascript unsafe "$r = $1;" js_export    :: Any -> JSVal
 foreign import javascript unsafe "$r = $1;" js_convertSn :: StableName# a -> JSIdent
 
