@@ -52,7 +52,7 @@ library
                        GHCJS.VDOM.QQ
                        GHCJS.VDOM.Render
                        GHCJS.VDOM.Unsafe
-  other-modules:       GHCJS.VDOM.Internal
+                       GHCJS.VDOM.Internal
                        GHCJS.VDOM.Internal.TH
                        GHCJS.VDOM.Internal.Thunk
                        GHCJS.VDOM.Internal.Types
