@@ -79,12 +79,6 @@ instance Attributes [Attribute] where
   mkAttributes xs = Attributes' (IB.buildObjectI $
                                 map (\(Attribute k v) -> (unsafeCoerce k,v)) xs)
 
--- a rewrite of the instance above, this solved my problem with attributes being added to the dom
--- but it also appears to break all my buttons.
--- instance Attributes [Attribute] where
---   mkAttributes xs = Attributes' $ IB.buildObjectI1 (toJSString "attributes") (attrObj xs)
---     where attrObj xs = (IB.buildObjectI $ map (\(Attribute k v) -> (unsafeCoerce k,v)) xs)
-
 mkTupleAttrInstances ''Attributes 'mkAttributes ''Attribute 'Attribute 'Attributes' [2..32]
 
 instance IsString VNode where fromString xs = text (JSS.pack xs)
