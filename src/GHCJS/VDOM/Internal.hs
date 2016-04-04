@@ -40,6 +40,12 @@ mkVNode :: (Attributes a, Children c) => JSString -> a -> c -> VNode
 mkVNode tag atts children = js_vnode tag (mkAttributes atts) (mkChildren children)
 {-# INLINE mkVNode #-}
 
+
+mkVNodeNS :: (Attributes a, Children c) => JSString -> JSString -> a -> c -> VNode
+mkVNodeNS ns tag atts children = js_vnode_ns ns tag (mkAttributes atts) (mkChildren children)
+{-# INLINE mkVNodeNS #-}
+
+
 mkElems :: [String] -> Q [Dec]
 mkElems = fmap concat . mapM (join mkElem)
 
@@ -138,8 +144,14 @@ mkDefaultEvents = do
   return $ foldl' (\xs e -> AppE (AppE cons (LitE . stringL $ e)) xs) nil evs
   
 js_vnode :: JSString -> Attributes' -> Children' -> VNode
-js_vnode tag (Attributes' props) (Children' children) =
-  VNode [jsu'| h$vdom.v(`tag, `props, `children) |]
+js_vnode tag (Attributes' props) (Children' children) =  VNode [jsu'| h$vdom.v(`tag, `props, `children) |]
+
+js_vnode_ns :: JSString -> JSString -> Attributes' -> Children' -> VNode
+js_vnode_ns ns tag (Attributes' props) (Children' children) =  VNode [jsu'|
+                                                                      (function (){
+                                                                       var p = `props;
+                                                                       p.namespace = `ns;
+                                                                       return h$vdom.v(`tag, p, `children); } () ) |]
   --VNode [jsu'| new h$vdom.VNode(`tag, `props, `children) |]
 
 getThunk :: J -> IO J
