@@ -25,7 +25,7 @@ customNS ns tag a c = I.mkVNodeNS ns tag a c
 
 
 customSVG :: (Attributes a, Children c) => JSString -> a -> c -> VNode
-customSVG ns tag a c = I.mkVNodeSVG tag a c
+customSVG tag a c = I.mkVNodeSVG tag a c
 {-# INLINE customSVG #-}
 
 

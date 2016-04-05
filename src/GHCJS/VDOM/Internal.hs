@@ -47,7 +47,7 @@ mkVNodeNS ns tag atts children = js_vnode_ns ns tag (mkAttributes atts) (mkChild
 
 mkVNodeSVG :: (Attributes a, Children c) => JSString -> a -> c -> VNode
 mkVNodeSVG  tag atts children = js_vnode_svg  tag (mkAttributes atts) (mkChildren children)
-{-# INLINE mkVNodeNS #-}
+{-# INLINE mkVNodeSVG #-}
 
 
 mkElems :: [String] -> Q [Dec]
