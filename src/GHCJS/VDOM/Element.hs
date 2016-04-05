@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
 module GHCJS.VDOM.Element ( custom
                           , customNS
+                          , customSVG
                           , text
                           , module GHCJS.VDOM.Element.Builtin
                           ) where
@@ -21,6 +22,11 @@ customNS :: (Attributes a, Children c) => JSString -> JSString -> a -> c -> VNod
 customNS ns tag a c = I.mkVNodeNS ns tag a c
 {-# INLINE customNS #-}
 
+
+
+customSVG :: (Attributes a, Children c) => JSString -> a -> c -> VNode
+customSVG ns tag a c = I.mkVNodeSVG tag a c
+{-# INLINE customSVG #-}
 
 
 
