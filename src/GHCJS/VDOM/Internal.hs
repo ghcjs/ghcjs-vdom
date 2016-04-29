@@ -40,6 +40,16 @@ mkVNode :: (Attributes a, Children c) => JSString -> a -> c -> VNode
 mkVNode tag atts children = js_vnode tag (mkAttributes atts) (mkChildren children)
 {-# INLINE mkVNode #-}
 
+
+mkVNodeNS :: (Attributes a, Children c) => JSString -> JSString -> a -> c -> VNode
+mkVNodeNS ns tag atts children = js_vnode_ns ns tag (mkAttributes atts) (mkChildren children)
+{-# INLINE mkVNodeNS #-}
+
+mkVNodeSVG :: (Attributes a, Children c) => JSString -> a -> c -> VNode
+mkVNodeSVG  tag atts children = js_vnode_svg  tag (mkAttributes atts) (mkChildren children)
+{-# INLINE mkVNodeSVG #-}
+
+
 mkElems :: [String] -> Q [Dec]
 mkElems = fmap concat . mapM (join mkElem)
 
@@ -118,7 +128,7 @@ mkEvent dcon name attr = do
 -- a must be a newtype of JSVal!
 mkEventAttr :: JSString -> (JSVal -> a) -> (a -> IO ()) -> Attribute
 mkEventAttr attr _wrap h =
-  
+
   let e  = unsafeExportValue h
       h' = [js'| h$vdom.makeHandler(`e, false) |]
   in  h' `seq` Attribute attr h'
@@ -136,11 +146,26 @@ mkDefaultEvents = do
   nil  <- [| [] |]
   cons <- [| (:) |]
   return $ foldl' (\xs e -> AppE (AppE cons (LitE . stringL $ e)) xs) nil evs
-  
+
 js_vnode :: JSString -> Attributes' -> Children' -> VNode
-js_vnode tag (Attributes' props) (Children' children) =
-  VNode [jsu'| h$vdom.v(`tag, `props, `children) |]
-  --VNode [jsu'| new h$vdom.VNode(`tag, `props, `children) |]
+js_vnode tag (Attributes' props) (Children' children) =  VNode [jsu'| h$vdom.v(`tag, `props, `children) |]
+
+js_vnode_ns :: JSString -> JSString -> Attributes' -> Children' -> VNode
+js_vnode_ns ns tag (Attributes' props) (Children' children) =  VNode [jsu'| new h$vdom.VNode(`tag, `props, `children) |]
+
+
+js_vnode_svg :: JSString -> Attributes' -> Children' -> VNode
+js_vnode_svg tag (Attributes' props) (Children' children) =  VNode [jsu'|
+                                                                       (function () {
+                                                                       var attrs = `props.attributes;
+                                                                       for (attrName in attrs) {
+                                                                         `props[attrName] = attrs [attrName];
+                                                                       }
+                                                                       delete(`props.attributes);
+
+                                                                       return h$vdom.s(`tag, `props, `children);
+                                                                       } ())|]
+
 
 getThunk :: J -> IO J
 getThunk x = IO (js_getThunk x)
@@ -173,7 +198,7 @@ objectIdent x = x `seq` js_makeObjectIdent (unsafeExportValue x)
   case makeStableName# x s of (# s', sn #) -> (# s', js_convertSn sn #)
 -}
 {-# INLINE objectIdent #-}
-                             
+
 foreign import javascript unsafe "$r = $1;" js_export    :: Any -> JSVal
 foreign import javascript unsafe "$r = $1;" js_convertSn :: StableName# a -> JSIdent
 
