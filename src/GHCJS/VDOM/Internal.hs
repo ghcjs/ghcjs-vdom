@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -76,10 +77,19 @@ mkEventTypes base = fmap concat . mapM mk
   where
     mk (n, cls) = do
       let nn     = mkName n
+#if MIN_VERSION_template_haskell(2,11,0)
+          mkI cn = InstanceD Nothing [] (AppT (ConT cn) (ConT nn)) []
+#else
           mkI cn = InstanceD [] (AppT (ConT cn) (ConT nn)) []
+#endif
           insts  = map mkI (base : cls)
       jsr <- [t| JSVal |]
+      typ <- [t| Typeable |]
+#if MIN_VERSION_template_haskell(2,11,0)
+      return $ (NewtypeD []  nn [] Nothing (NormalC nn [(Bang NoSourceUnpackedness NoSourceStrictness, jsr)]) [ typ ]) : insts
+#else
       return $ (NewtypeD [] nn [] (NormalC nn [(NotStrict, jsr)]) [''Typeable]) : insts
+#endif
 
 newtype CreatedEvents = CreatedEvents { unCreatedEvents :: [String] }
   deriving (Typeable)
@@ -98,12 +108,21 @@ mkEvent dcon name attr = do
       emsg = "GHCJS.VDOM.Internal.mkEvent: expected newtype constructor"
   i <- reify dcon
   dctyp <- case i of
+#if MIN_VERSION_template_haskell(2,11,0)
+    DataConI _ _ pn -> do
+      pni <- reify pn
+      case pni of
+         TyConI (NewtypeD _ ctn _ _ _ _) -> return (ConT ctn)
+         _                               -> error emsg
+    _                 -> error emsg
+#else
     DataConI _ _ pn _ -> do
       pni <- reify pn
       case pni of
          TyConI (NewtypeD _ ctn _ _ _) -> return (ConT ctn)
          _                             -> error emsg
     _                 -> error emsg
+#endif
   iou <- [t| IO () |]
   h <- newName "h"
   b <- [| mkEventAttr (fromString attr) |]

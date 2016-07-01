@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
+{-# LANGUAGE CPP, TemplateHaskell, QuasiQuotes #-}
 
 module GHCJS.VDOM.Internal.TH where
 
@@ -27,11 +27,18 @@ mkTupleChildrenInstance cls method ty con wrapper n = do
       pat   = [TupP (map (ConP con . (:[]) . VarP) xs)]
       body  = NormalB (AppE (ConE wrapper)
                            (foldl' (\e v -> AppE e (VarE v)) (VarE build) xs))
+#if MIN_VERSION_template_haskell(2,11,0)
+  return [InstanceD Nothing [] t [ FunD method [Clause pat body []]
+                                 , PragmaD (InlineP method Inline FunLike AllPhases)
+                                 ]
+         ]
+#else
   return [InstanceD [] t [ FunD method [Clause pat body []]
                          , PragmaD (InlineP method Inline FunLike AllPhases)
                          ]
          ]
-  
+#endif
+
 mkTupleAttrInstances :: Name -> Name -> Name -> Name -> Name -> [Int] -> Q [Dec]
 mkTupleAttrInstances cls method ty con wrapper xs =
   concat <$> mapM (mkTupleAttrInstance cls method ty con wrapper) xs
@@ -53,7 +60,14 @@ mkTupleAttrInstance cls method ty con wrapper n = do
       app e k v = AppE (AppE e (AppE (VarE 'unsafeCoerce) (VarE k))) (VarE v)
       body  = NormalB (AppE (ConE wrapper)
                            (foldl' (\e [k,v] -> app e k v) (VarE build) xs))
+#if MIN_VERSION_template_haskell(2,11,0)
+  return [InstanceD Nothing [] t [ FunD method [Clause pat body []]
+                                 , PragmaD (InlineP method Inline FunLike AllPhases)
+                                 ]
+         ]
+#else
   return [InstanceD [] t [ FunD method [Clause pat body []]
                          , PragmaD (InlineP method Inline FunLike AllPhases)
                          ]
          ]
+#endif
