@@ -54,6 +54,7 @@ var isVirtualNode = require('virtual-dom/vnode/is-vnode');
 var isThunk       = require('virtual-dom/vnode/is-thunk');
 var isWidget      = require("virtual-dom/vnode/is-widget");
 var h             = require('virtual-dom/h');
+var svg           = require('virtual-dom/virtual-hyperscript/svg');
 var isArray       = require('x-is-array');
 var VPatch        = require("virtual-dom/vnode/vpatch");
 var VText         = require('virtual-dom/vnode/vtext');
@@ -83,7 +84,7 @@ function HSThunk(t, ids, key) {
 
 HSThunk.prototype.type = 'Thunk';
 
-/* 
+/*
   render returns the deferred rendering object
   null if the thunk has already been rendered, in which case the value is in this.vnode
  */
@@ -242,7 +243,7 @@ HSMount.prototype.patch = function(p) {
   this.vnode = p.vnode;
   return true;
 }
-  
+
 /* mount a vdom tree, making it visible to extensible retention */
 function mount(domNode) {
   while(domNode.firstChild) domNode.removeChild(domNode.firstChild);
@@ -339,7 +340,7 @@ function scanTree(o, currentMark) {
       return true;
     }
   } else { // not a ghcjs-vdom object, fall through
-    return false; 
+    return false;
   }
 }
 
@@ -412,6 +413,10 @@ function v(tag, props, children) {
   return h(tag, props, children);
 }
 
+function s(tag, props, children) {
+  return svg(tag, props, children);
+}
+
 function t(text) {
   return new VText(text);
 }
@@ -423,6 +428,7 @@ function th(t, ids, key) {
 function c(r, m, u, key) {
   return new HSComponent(r, m, u, key);
 }
+
 
 function makeHandler(action, async) {
   var f = function(ev) {
@@ -445,6 +451,7 @@ module.exports = { setThunkPatch: setThunkPatch
                  , th:            th
                  , t:             t
                  , c:             c
+                 , s:             s
                  , makeHandler:   makeHandler
                  };
 
