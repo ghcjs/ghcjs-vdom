@@ -1,5 +1,5 @@
 name:                ghcjs-vdom
-version:             0.2.0.1
+version:             0.2.0.2
 synopsis:            Virtual-dom bindings for GHCJS
 description:         Virtual-dom is a library for fast incremental DOM
                      updates by comparing virtual immutable DOM trees to
