@@ -35,6 +35,7 @@ module GHCJS.VDOM.Event ( initEventDelegation
                         , keypress
                         , keyup
                           --
+                        , input
                         , key
                         , ctrlKey
                         , metaKey
@@ -111,7 +112,7 @@ mkEvents 'MouseEvent [ "click", "dblclick", "mousedown", "mouseenter"
                      , "mouseover", "mouseup"
                      ]
 
-mkEvents 'KeyboardEvent [ "keydown", "keypress", "keyup" ]
+mkEvents 'KeyboardEvent [ "keydown", "keypress", "keyup" ,"input"]
 
 mkEvents 'DragEvent [ "drag", "dragend", "dragenter", "dragleave"
                     , "dragover", "dragstart" ]

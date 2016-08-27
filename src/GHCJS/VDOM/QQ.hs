@@ -85,4 +85,3 @@ jsExpQQ pat args unwrap wrap = do
   qAddTopDecls [ffiDecl]
   qPutQ (QQCounter (c+1))
   return $ wrap (ffiCall $ reverse args)
-
