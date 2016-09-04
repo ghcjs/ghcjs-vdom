@@ -7,7 +7,7 @@
 
 module GHCJS.VDOM.Event ( initEventDelegation
                         , defaultEvents
---                        , target
+                        , target
                         , stopPropagation
                         , stopImmediatePropagation
                         , preventDefault
@@ -136,6 +136,10 @@ defaultEvents = $(mkDefaultEvents)
 
 -- target :: Event_ a => a -> VNode
 -- target e = undefined
+
+target :: Event_ a => a -> JSVal
+target = er $ \e -> [jsu'| `e.target |]
+{-# INLINE target #-}
 
 stopPropagation :: Event_ a => a -> IO ()
 stopPropagation = er $ \e -> [jsu_| `e.stopPropagation(); |]
