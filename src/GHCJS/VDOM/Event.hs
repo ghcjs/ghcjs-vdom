@@ -69,6 +69,12 @@ module GHCJS.VDOM.Event ( initEventDelegation
                         , deltaY
                         , deltaZ
                         , deltaMode
+
+                          -- * input
+                        , InputEvent
+                        , input
+                          --
+                        , inputValue
                           
                           -- * generic
                         , Event
@@ -96,10 +102,12 @@ class Coercible a JSVal => Event_ a
 class Event_ a          => KeyModEvent_ a
 class Event_ a          => MouseEvent_ a
 class Event_ a          => FocusEvent_ a
+class Event_ a          => InputEvent_ a
 
 mkEventTypes ''Event_ [ ("MouseEvent",    [''MouseEvent_])
                       , ("KeyboardEvent", [''KeyModEvent_])
                       , ("FocusEvent",    [''FocusEvent_])
+                      , ("InputEvent",    [''InputEvent_])
                       , ("DragEvent",     [])
                       , ("WheelEvent",    [])
                       , ("UIEvent",       [])
@@ -112,6 +120,8 @@ mkEvents 'MouseEvent [ "click", "dblclick", "mousedown", "mouseenter"
                      ]
 
 mkEvents 'KeyboardEvent [ "keydown", "keypress", "keyup" ]
+
+mkEvents 'InputEvent [ "input" ]
 
 mkEvents 'DragEvent [ "drag", "dragend", "dragenter", "dragleave"
                     , "dragover", "dragstart" ]
@@ -200,3 +210,7 @@ clientX = er $ \e -> [jsu'| `e.clientX|0 |]
 clientY :: MouseEvent -> Int
 clientY = er $ \e -> [jsu'| `e.clientY|0 |]
 {-# INLINE clientY #-}
+
+inputValue :: InputEvent -> JSString
+inputValue = er $ \e -> [jsu'| String(`e.target.value||'') |]
+{-# INLINE inputValue #-}
