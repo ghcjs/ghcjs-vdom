@@ -28,6 +28,12 @@ module GHCJS.VDOM.Event ( initEventDelegation
                         , buttons
                         , clientX
                         , clientY
+                        
+                          -- * touch
+                        , TouchEvent
+                        , touchcancel
+                        , touchend
+                        , touchstart
                            
                           -- * keyboard
                         , KeyboardEvent
@@ -96,9 +102,11 @@ initEventDelegation eventTypes = do
 class Coercible a JSVal => Event_ a
 class Event_ a          => KeyModEvent_ a
 class Event_ a          => MouseEvent_ a
+class Event_ a          => TouchEvent_ a
 class Event_ a          => FocusEvent_ a
 
 mkEventTypes ''Event_ [ ("MouseEvent",    [''MouseEvent_])
+                      , ("TouchEvent",    [''TouchEvent_])
                       , ("KeyboardEvent", [''KeyModEvent_])
                       , ("FocusEvent",    [''FocusEvent_])
                       , ("DragEvent",     [])
@@ -111,6 +119,8 @@ mkEvents 'MouseEvent [ "click", "dblclick", "mousedown", "mouseenter"
                      , "mouseleave", "mousemove", "mouseout"
                      , "mouseover", "mouseup"
                      ]
+
+mkEvents 'TouchEvent ["touchcancel", "touchend", "touchstart"]
 
 mkEvents 'KeyboardEvent [ "keydown", "keypress", "keyup" ,"input"]
 
